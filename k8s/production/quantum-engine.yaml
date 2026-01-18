@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quantum-engine
+  namespace: quan-production
+  labels:
+    app: quantum-engine
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: quantum-engine
+  template:
+    metadata:
+      labels:
+        app: quantum-engine
+    spec:
+      containers:
+      - name: quantum-engine
+        image: gcr.io/quan-recovery/quantum-engine:latest
+        ports:
+        - containerPort: 50051
+          name: grpc
+        env:
+        - name: MODEL_REGISTRY_PATH
+          value: "/models"
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
+        resources:
+          requests:
+            memory: "8Gi"
+            cpu: "4000m"
+            nvidia.com/gpu: 1
+          limits:
+            memory: "16Gi"
+            cpu: "8000m"
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: models
+          mountPath: /models
+          readOnly: true
+      volumes:
+      - name: models
+        persistentVolumeClaim:
+          claimName: quan-models-pvc
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-tesla-t4
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quantum-engine-service
+  namespace: quan-production
+spec:
+  selector:
+    app: quantum-engine
+  ports:
+  - port: 50051
+    targetPort: 50051
+    name: grpc
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-pipeline
+  namespace: quan-production
+  labels:
+    app: ml-pipeline
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ml-pipeline
+  template:
+    metadata:
+      labels:
+        app: ml-pipeline
+    spec:
+      containers:
+      - name: ml-pipeline
+        image: gcr.io/quan-recovery/ml-pipeline:latest
+        ports:
+        - containerPort: 50052
+          name: grpc
+        env:
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: quan-secrets
+              key: redis-url
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2000m"
+          limits:
+            memory: "8Gi"
+            cpu: "4000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-pipeline-service
+  namespace: quan-production
+spec:
+  selector:
+    app: ml-pipeline
+  ports:
+  - port: 50052
+    targetPort: 50052
+    name: grpc
+  type: ClusterIP
