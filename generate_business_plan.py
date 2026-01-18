@@ -102,7 +102,7 @@ bullet_style = ParagraphStyle(
 # Cover Page
 elements.append(Spacer(1, 2*inch))
 elements.append(Paragraph("QUAN Recovery", title_style))
-elements.append(Paragraph("Quantum Intelligence for Micro-Debt Collection", subtitle_style))
+elements.append(Paragraph("AI-Powered Micro-Debt Collection", subtitle_style))
 elements.append(Spacer(1, 0.5*inch))
 elements.append(Paragraph("Transforming $400B in Abandoned Debt Into Profitable Assets", body_style))
 elements.append(Spacer(1, 2*inch))
@@ -112,7 +112,7 @@ company_info_data = [
     ["Founder & CEO:", "Greyson McGill"],
     ["Industry:", "Financial Technology / Debt Recovery"],
     ["Target Market:", "Sub-$1,000 Consumer Debt"],
-    ["Core Technology:", "AI-Powered Quantum Intelligence"],
+    ["Core Technology:", "ML-Powered Collection Intelligence"],
     ["Website:", "quanrecovery.com"],
     ["Contact:", "greyson@quanrecovery.com"]
 ]
@@ -139,7 +139,7 @@ elements.append(Paragraph("Executive Summary", heading_style))
 elements.append(HRFlowable(width="100%", thickness=2, color=QUAN_PURPLE, spaceBefore=2, spaceAfter=12))
 
 exec_summary_text = """
-QUAN Recovery is revolutionizing the debt collection industry by making sub-$1,000 debt collection profitable for the first time in history. Using quantum-inspired AI technology, we achieve 35% recovery rates on debt that traditional collectors abandon due to negative unit economics.
+QUAN Recovery is revolutionizing the debt collection industry by making sub-$1,000 debt collection profitable for the first time in history. Using ML-powered collection intelligence, we achieve 35% recovery rates on debt that traditional collectors abandon due to negative unit economics.
 
 <b>The Problem:</b> $400 billion in micro-debt is written off annually because human collection costs ($47) exceed recovery value on small balances. BNPL providers, banks, and digital services hemorrhage billions in uncollected micro-debt.
 
@@ -151,7 +151,7 @@ QUAN Recovery is revolutionizing the debt collection industry by making sub-$1,0
 • $15B in overdraft/NSF fees
 • 150 million Americans with BNPL accounts
 
-<b>Competitive Advantage:</b> 97% profit margins through complete automation, quantum intelligence that analyzes portfolios holistically, and first-mover advantage in an abandoned market.
+<b>Competitive Advantage:</b> 97% profit margins through complete automation, collection intelligence that analyzes portfolios holistically, and first-mover advantage in an abandoned market.
 """
 
 elements.append(Paragraph(exec_summary_text, body_style))
@@ -244,13 +244,13 @@ elements.append(comparison_table)
 elements.append(Spacer(1, 0.3*inch))
 
 tech_text = """
-<b>The Quantum Intelligence Advantage:</b>
+<b>The Collection Intelligence Advantage:</b>
 
-Unlike traditional linear collection methods that process accounts individually, QUAN's quantum-inspired architecture analyzes entire portfolios simultaneously, identifying hidden correlations and optimal strategies invisible to conventional analysis.
+Unlike traditional linear collection methods that process accounts individually, QUAN's ML-powered architecture analyzes entire portfolios simultaneously, identifying hidden correlations and optimal strategies invisible to conventional analysis.
 
 <b>Core Technology Components:</b>
 
-• <b>Quantum Analysis Engine:</b> Processes accounts in superposition, finding patterns across portfolios
+• <b>ML Analysis Engine:</b> Processes accounts in parallel, finding patterns across portfolios
 • <b>Behavioral AI:</b> Predicts payment probability with 89% accuracy using 47 variables
 • <b>Omnichannel Orchestration:</b> Coordinates SMS, email, voice, and digital communications
 • <b>Compliance Guardian:</b> Real-time FDCPA/TCPA validation on every action
@@ -406,7 +406,7 @@ competitive_text = """
 
 <b>Our Defensible Moats:</b>
 • <b>Economic Moat:</b> 97% margins vs industry losses
-• <b>Technical Moat:</b> Quantum analysis genuinely novel
+• <b>Technical Moat:</b> Proprietary ML pipeline with behavioral intelligence
 • <b>Network Effects:</b> Every account improves AI
 • <b>Regulatory Moat:</b> Compliance built-in from day 1
 • <b>First Mover:</b> 2-year head start in virgin market
@@ -618,7 +618,7 @@ appendix_text = """
 
 <b>Key Technology Differentiators:</b>
 
-• Quantum-inspired portfolio analysis (patent pending)
+• ML-powered portfolio analysis (patent pending)
 • 47-variable behavioral scoring model
 • Real-time compliance engine with 50-state rules
 • Omnichannel orchestration across 7 communication methods
@@ -645,7 +645,7 @@ contact_style = ParagraphStyle(
 )
 
 elements.append(Paragraph("<b>QUAN Recovery</b>", contact_style))
-elements.append(Paragraph("Quantum Intelligence for the Micro-Economy", contact_style))
+elements.append(Paragraph("AI-Powered Micro-Debt Collection", contact_style))
 elements.append(Spacer(1, 0.5*inch))
 elements.append(Paragraph("<b>Greyson McGill</b>", contact_style))
 elements.append(Paragraph("Founder & CEO", contact_style))
@@ -654,7 +654,7 @@ elements.append(Paragraph("Email: greyson@quanrecovery.com", contact_style))
 elements.append(Paragraph("Website: quanrecovery.com", contact_style))
 elements.append(Paragraph("LinkedIn: linkedin.com/in/greysonmcgill", contact_style))
 elements.append(Spacer(1, 1*inch))
-elements.append(Paragraph('"We don\'t collect debt. We reveal value hidden in quantum superposition."',
+elements.append(Paragraph('"We don\'t just collect debt. We use ML to unlock value others abandon."',
                           ParagraphStyle('Quote', parent=contact_style, fontSize=12, textColor=QUAN_PURPLE, fontName='Helvetica-Oblique')))
 
 # Build PDF

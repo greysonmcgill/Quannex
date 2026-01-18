@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Any, Callable
 import asyncio
 import logging
 
-from quan.quantum.engine import QuantumEngine, QuantumSignal
+from quan.intelligence.engine import CollectionIntelligence, CollectionStrategy
 from quan.ml.models import PaymentProbabilityNet, NegotiationAgent, SettlementOptimizer
 from quan.compliance.engine import ComplianceEngine, ContactGovernor
 from quan.communications.engine import CommunicationEngine
@@ -64,7 +64,7 @@ class Account:
     stage: PipelineStage = PipelineStage.ACQUIRE
 
     # Scoring
-    quantum_score: float = 0.0
+    ml_score: float = 0.0
     recovery_probability: float = 0.0
     priority_rank: int = 0
 
@@ -114,7 +114,7 @@ class QuanPipeline:
 
     def __init__(self):
         # Core engines
-        self.quantum = QuantumEngine()
+        self.intelligence = CollectionIntelligence()
         self.compliance = ComplianceEngine()
         self.contact_governor = ContactGovernor()
         self.communications = CommunicationEngine()
@@ -165,16 +165,16 @@ class QuanPipeline:
             # ML scoring - payment probability
             recovery_prob = float(self.scorer.predict_proba(features)[0])
 
-            # Quantum analysis for portfolio-level insights
-            quantum_signal = await self._get_quantum_signal(account)
-            quantum_score = float(quantum_signal.state_vector.mean())
+            # Get strategy from collection intelligence
+            strategy = self.intelligence.generate_strategy(account.__dict__)
+            ml_score = strategy.recovery_probability
 
             # Combined score (weighted average)
-            combined_score = (0.6 * recovery_prob) + (0.4 * quantum_score)
+            combined_score = (0.6 * recovery_prob) + (0.4 * ml_score)
 
             # Update account
             account.recovery_probability = recovery_prob
-            account.quantum_score = quantum_score
+            account.ml_score = ml_score
             account.status = AccountStatus.SCORED
 
             # Priority ranking (higher score = higher priority)
@@ -193,7 +193,7 @@ class QuanPipeline:
                 next_stage=PipelineStage.LOCATE,
                 metrics={
                     "recovery_probability": recovery_prob,
-                    "quantum_score": quantum_score,
+                    "ml_score": ml_score,
                     "priority_rank": account.priority_rank,
                 },
             )
@@ -437,12 +437,12 @@ class QuanPipeline:
             authority = await self._calculate_settlement_authority(account)
             account.settlement_authority = authority
 
-            # Get quantum signal for negotiation context
-            quantum_signal = await self._get_quantum_signal(account)
+            # Get collection strategy for negotiation context
+            collection_strategy = self.intelligence.generate_strategy(account.__dict__)
 
             # Determine negotiation strategy
             strategy = await self._determine_negotiation_strategy(
-                account, quantum_signal
+                account, collection_strategy
             )
 
             # STEP 1: Always start with full payment ask
@@ -927,20 +927,9 @@ class QuanPipeline:
             # ... more features
         ]
 
-    async def _get_quantum_signal(self, account: Account) -> QuantumSignal:
-        """Get quantum analysis signal for account"""
-
-        # In production, this would batch analyze portfolio
-        quantum_state = self.quantum.quantum_analyze([account.__dict__])
-        signals = self.quantum.collapse_to_signal(quantum_state)
-
-        return signals[0] if signals else QuantumSignal(
-            account_id=account.account_id,
-            state_vector=np.array([0.5]),
-            cluster_embedding=np.zeros(64),
-            coherence_weight=1.0,
-            correlation_ids=[],
-        )
+    def _get_collection_strategy(self, account: Account) -> CollectionStrategy:
+        """Get collection strategy for account"""
+        return self.intelligence.generate_strategy(account.__dict__)
 
     async def _skip_trace(self, account: Account) -> Dict[str, List[str]]:
         """Perform skip trace to find contact info"""
@@ -1064,13 +1053,13 @@ class QuanPipeline:
     async def _determine_negotiation_strategy(
         self,
         account: Account,
-        quantum_signal: QuantumSignal,
+        collection_strategy: CollectionStrategy,
     ) -> Dict:
-        """Determine negotiation strategy based on quantum analysis"""
+        """Determine negotiation strategy based on collection intelligence"""
 
         return {
-            "aggression": quantum_signal.coherence_weight,
-            "max_discount": 1 - (quantum_signal.state_vector.mean() * 0.5),
+            "aggression": collection_strategy.confidence,
+            "max_discount": 1 - (collection_strategy.recovery_probability * 0.5),
         }
 
     def _generate_full_payment_pitch(self, account: Account) -> str:

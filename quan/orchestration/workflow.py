@@ -77,25 +77,20 @@ class EnrichmentHandler(StageHandler):
 
 
 class ScoringHandler(StageHandler):
-    """Handle quantum scoring stage"""
+    """Handle ML-based scoring stage"""
 
     async def process(self, account: Dict, campaign: Campaign) -> Dict:
-        from quan.quantum import QuantumEngine
+        from quan.intelligence import CollectionIntelligence
 
-        engine = QuantumEngine()
-        state = engine.quantum_analyze([account])
-        strategies = engine.collapse_to_strategy(state)
+        engine = CollectionIntelligence()
+        strategy = engine.generate_strategy(account)
 
-        if strategies:
-            strategy = strategies[0]
-            return {
-                "stage_completed": "scoring",
-                "recovery_probability": strategy.recovery_probability,
-                "optimal_channels": strategy.optimal_channels,
-                "timestamp": datetime.utcnow().isoformat(),
-            }
-
-        return {"stage_completed": "scoring", "error": "No strategy generated"}
+        return {
+            "stage_completed": "scoring",
+            "recovery_probability": strategy.recovery_probability,
+            "optimal_channels": strategy.optimal_channels,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
 
 
 class ContactHandler(StageHandler):
@@ -111,7 +106,7 @@ class ContactHandler(StageHandler):
         }
 
 
-class QuantumOrchestrator:
+class CollectionOrchestrator:
     """Distributed orchestration of collection workflows"""
 
     def __init__(self):

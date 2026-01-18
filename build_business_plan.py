@@ -39,11 +39,11 @@ def create_quan_demo_plan() -> BusinessPlan:
     # Company
     plan.company = CompanyInfo(
         name="QUAN Recovery",
-        tagline="Quantum Intelligence for Micro-Debt Collection",
+        tagline="AI-Powered Micro-Debt Collection",
         description=(
             "QUAN Recovery is revolutionizing the debt collection industry by making "
             "sub-$1,000 debt collection profitable for the first time in history. "
-            "Using quantum-inspired AI technology, we achieve 35% recovery rates on "
+            "Using ML-powered collection intelligence, we achieve 35% recovery rates on "
             "debt that traditional collectors abandon due to negative unit economics."
         ),
         industry=Industry.FINTECH,
@@ -91,7 +91,7 @@ def create_quan_demo_plan() -> BusinessPlan:
             "and behavioral intelligence. We transform worthless debt into profitable assets."
         ),
         key_features=[
-            "Quantum-inspired portfolio analysis",
+            "ML-powered portfolio analysis",
             "AI-powered omnichannel outreach (SMS, email, voice)",
             "Behavioral prediction with 89% accuracy",
             "Real-time compliance engine (FDCPA/TCPA)",
@@ -100,14 +100,14 @@ def create_quan_demo_plan() -> BusinessPlan:
         ],
         differentiators=[
             "97% profit margins through complete automation",
-            "Quantum intelligence analyzes portfolios holistically",
+            "Collection intelligence analyzes portfolios holistically",
             "First-mover advantage in abandoned micro-debt market",
             "Compliance built-in from day 1",
         ],
         technology=[
-            "Quantum-inspired machine learning",
+            "Gradient boosting for payment probability",
             "Graph neural networks for behavioral analysis",
-            "Transformer-based negotiation AI",
+            "Reinforcement learning for contact optimization",
             "Distributed processing (Ray, Kafka)",
         ],
         how_it_works=(
@@ -170,12 +170,12 @@ def create_quan_demo_plan() -> BusinessPlan:
         ],
         competitive_advantages=[
             "97% margins vs industry losses",
-            "Quantum analysis genuinely novel",
+            "ML-powered collection intelligence",
             "2-year head start in virgin market",
         ],
         moats=[
             "Economic moat: Profitable where others lose money",
-            "Technical moat: Proprietary quantum-inspired AI",
+            "Technical moat: Proprietary ML pipeline",
             "Network effects: Every account improves the AI",
             "Regulatory moat: Compliance built-in",
         ],
@@ -394,8 +394,8 @@ def create_quan_demo_plan() -> BusinessPlan:
     # Executive Summary
     plan.executive_summary = (
         "QUAN Recovery is revolutionizing the debt collection industry by making sub-$1,000 "
-        "debt collection profitable for the first time in history. Using quantum-inspired AI "
-        "technology, we achieve 35% recovery rates on debt that traditional collectors abandon "
+        "debt collection profitable for the first time in history. Using ML-powered collection "
+        "intelligence, we achieve 35% recovery rates on debt that traditional collectors abandon "
         "due to negative unit economics.\n\n"
         "<b>The Problem:</b> $400 billion in micro-debt is written off annually because human "
         "collection costs ($47) exceed recovery value on small balances.\n\n"

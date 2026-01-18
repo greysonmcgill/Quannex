@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="QUAN Recovery API",
-    description="Quantum Intelligence for Micro-Debt Collection",
+    description="AI-Powered Micro-Debt Collection Platform",
     version="0.1.0",
     lifespan=lifespan,
 )
@@ -110,15 +110,15 @@ async def ready():
 # API routes for core functionality
 @app.post("/api/v1/analyze")
 async def analyze_portfolio(request: Request):
-    """Analyze portfolio with quantum engine"""
-    from quan.quantum import QuantumEngine
+    """Analyze portfolio with collection intelligence"""
+    from quan.intelligence import CollectionIntelligence
 
     body = await request.json()
     accounts = body.get("accounts", [])
 
-    engine = QuantumEngine()
-    state = engine.quantum_analyze(accounts)
-    strategies = engine.collapse_to_strategy(state)
+    engine = CollectionIntelligence()
+    analysis = engine.analyze_portfolio(accounts)
+    strategies = [engine.generate_strategy(acc) for acc in accounts]
 
     return {
         "analyzed": len(accounts),
@@ -127,22 +127,22 @@ async def analyze_portfolio(request: Request):
                 "account_id": s.account_id,
                 "recovery_probability": s.recovery_probability,
                 "optimal_channels": s.optimal_channels,
-                "settlement_authority": s.settlement_authority,
+                "settlement_threshold": s.settlement_threshold,
             }
             for s in strategies
         ],
-        "coherence": state.coherence,
+        "expected_rate": analysis.get("expected_rate", 0),
     }
 
 
 @app.post("/api/v1/campaigns")
 async def create_campaign(request: Request):
     """Create collection campaign"""
-    from quan.orchestration import QuantumOrchestrator
+    from quan.orchestration import CollectionOrchestrator
 
     body = await request.json()
 
-    orchestrator = QuantumOrchestrator()
+    orchestrator = CollectionOrchestrator()
     campaign = await orchestrator.process_portfolio(
         portfolio_id=body.get("portfolio_id"),
         accounts=body.get("accounts", []),
@@ -159,9 +159,9 @@ async def create_campaign(request: Request):
 @app.get("/api/v1/campaigns/{campaign_id}")
 async def get_campaign(campaign_id: str):
     """Get campaign status"""
-    from quan.orchestration import QuantumOrchestrator
+    from quan.orchestration import CollectionOrchestrator
 
-    orchestrator = QuantumOrchestrator()
+    orchestrator = CollectionOrchestrator()
     status = await orchestrator.get_campaign_status(campaign_id)
 
     if not status:

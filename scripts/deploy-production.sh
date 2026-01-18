@@ -46,7 +46,7 @@ kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f 
 # Apply Kubernetes configurations
 echo "📋 Applying Kubernetes configurations..."
 kubectl apply -f k8s/production/deployment.yaml
-kubectl apply -f k8s/production/quantum-engine.yaml
+kubectl apply -f k8s/production/intelligence-engine.yaml
 
 # Wait for rollout
 echo "⏳ Waiting for rollout to complete..."

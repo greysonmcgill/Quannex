@@ -39,7 +39,7 @@ class Settings(BaseSettings):
 
     # ML Models
     model_registry_path: str = "/models"
-    quantum_engine_url: str = "localhost:50051"
+    intelligence_engine_url: str = "localhost:50051"
 
     # Compliance
     max_weekly_contact_attempts: int = 7

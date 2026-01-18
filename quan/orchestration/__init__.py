@@ -2,12 +2,17 @@
 
 from .workflow import (
     CollectionStage,
-    QuantumOrchestrator,
+    CollectionOrchestrator,
     ContactOrchestrator,
 )
 
+# Backward compatibility alias
+QuantumOrchestrator = CollectionOrchestrator
+
 __all__ = [
     "CollectionStage",
-    "QuantumOrchestrator",
+    "CollectionOrchestrator",
     "ContactOrchestrator",
+    # Legacy alias
+    "QuantumOrchestrator",
 ]

@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: quantum-engine
+  name: intelligence-engine
   namespace: quan-production
   labels:
-    app: quantum-engine
+    app: intelligence-engine
 spec:
   replicas: 5
   selector:
     matchLabels:
-      app: quantum-engine
+      app: intelligence-engine
   template:
     metadata:
       labels:
-        app: quantum-engine
+        app: intelligence-engine
     spec:
       containers:
-      - name: quantum-engine
-        image: gcr.io/quan-recovery/quantum-engine:latest
+      - name: intelligence-engine
+        image: gcr.io/quan-recovery/intelligence-engine:latest
         ports:
         - containerPort: 50051
           name: grpc
@@ -53,11 +53,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: quantum-engine-service
+  name: intelligence-engine-service
   namespace: quan-production
 spec:
   selector:
-    app: quantum-engine
+    app: intelligence-engine
   ports:
   - port: 50051
     targetPort: 50051
