@@ -1,9 +1,11 @@
 """QUAN Recovery - Main Application Entry Point"""
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 import logging
+from pathlib import Path
 
 from quan.config import settings
 from quan.ingestion import ingestion_router
@@ -105,6 +107,21 @@ async def ready():
         "ready": all_ready,
         "checks": checks,
     }
+
+
+@app.get("/api/v1/business-plan/download")
+async def download_business_plan():
+    """Download the QUAN business plan PDF."""
+    pdf_path = Path(__file__).resolve().parents[1] / "QUAN_Business_Plan.pdf"
+
+    if not pdf_path.exists():
+        raise HTTPException(status_code=404, detail="Business plan not found")
+
+    return FileResponse(
+        pdf_path,
+        media_type="application/pdf",
+        filename=pdf_path.name,
+    )
 
 
 # API routes for core functionality
