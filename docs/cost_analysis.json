@@ -1,0 +1,341 @@
+{
+  "seed": {
+    "inputs": {
+      "states": [
+        "CA",
+        "TX",
+        "NY",
+        "FL",
+        "IL"
+      ],
+      "accounts_per_month": 10000,
+      "avg_balance": 400,
+      "recovery_rate": 0.47,
+      "commission_rate": 0.3,
+      "team_size": 3
+    },
+    "revenue": {
+      "total_balance_monthly": 4000000,
+      "collected_monthly": 1880000.0,
+      "revenue_monthly": 564000.0,
+      "revenue_annual": 6768000.0
+    },
+    "costs": {
+      "licensing": {
+        "license_fees": 2200,
+        "bond_face_value": 90000,
+        "bond_premium_annual": 2700.0,
+        "annual_renewals": 1100,
+        "year_1_total": 4900.0,
+        "ongoing_annual": 3800.0
+      },
+      "infrastructure": {
+        "compute": 400.0,
+        "database": 300.0,
+        "cache": 150.0,
+        "storage": 50,
+        "networking": 150.0,
+        "monitoring": 100.0,
+        "monthly_total": 1150.0,
+        "annual_total": 13800.0
+      },
+      "communications": {
+        "sms_volume": 40000.0,
+        "sms_cost": 300.0,
+        "email_volume": 30000.0,
+        "email_cost": 30.0,
+        "voice_minutes": 5000.0,
+        "voice_cost": 75.0,
+        "platform_fees": 50,
+        "monthly_total": 455.0
+      },
+      "payment_processing": {
+        "card_transactions": 7520.0,
+        "card_fees": 34968.0,
+        "ach_transactions": 5013.333333333334,
+        "ach_fees": 7269.333333333334,
+        "monthly_total": 42237.333333333336,
+        "effective_rate": 0.02246666666666667
+      },
+      "data_providers": {
+        "skip_traces": 3000.0,
+        "skip_cost": 2250.0,
+        "verifications": 1000.0,
+        "verify_cost": 150.0,
+        "phone_validations": 20000,
+        "phone_cost": 200.0,
+        "monthly_total": 2600.0
+      },
+      "compliance": {
+        "dnc_scrubbing": 200,
+        "call_recording": 200.0,
+        "compliance_software": 500,
+        "audit_reserve": 500,
+        "monthly_total": 1400.0
+      },
+      "insurance": {
+        "eo_annual": 16768.0,
+        "cyber_annual": 13536.0,
+        "general_liability_annual": 1500,
+        "do_annual": 3000,
+        "annual_total": 34804.0,
+        "monthly_total": 2900.3333333333335
+      },
+      "saas": {
+        "slack": 37.5,
+        "google_workspace": 36,
+        "github": 63,
+        "linear": 24,
+        "one_password": 24,
+        "zendesk": 150,
+        "datadog": 300,
+        "vanta": 833,
+        "monthly_total": 1467.5
+      }
+    },
+    "totals": {
+      "monthly_operating_cost": 52210.16666666667,
+      "annual_operating_cost": 626522.0,
+      "year_1_startup_cost": 24900.0,
+      "cost_per_account": 5.221016666666667,
+      "cost_per_dollar_collected": 0.027771365248226952
+    },
+    "profitability": {
+      "monthly_gross_profit": 511789.8333333333,
+      "gross_margin": 0.9074287825059101,
+      "annual_gross_profit": 6141478.0,
+      "breakeven_accounts": 925.7121749408984
+    }
+  },
+  "series_a": {
+    "inputs": {
+      "states": [
+        "CA",
+        "TX",
+        "NY",
+        "FL",
+        "IL",
+        "PA",
+        "OH",
+        "GA",
+        "NC",
+        "NJ"
+      ],
+      "accounts_per_month": 100000,
+      "avg_balance": 400,
+      "recovery_rate": 0.47,
+      "commission_rate": 0.3,
+      "team_size": 15
+    },
+    "revenue": {
+      "total_balance_monthly": 40000000,
+      "collected_monthly": 18800000.0,
+      "revenue_monthly": 5640000.0,
+      "revenue_annual": 67680000.0
+    },
+    "costs": {
+      "licensing": {
+        "license_fees": 4050,
+        "bond_face_value": 115000,
+        "bond_premium_annual": 3450.0,
+        "annual_renewals": 2025,
+        "year_1_total": 7500.0,
+        "ongoing_annual": 5475.0
+      },
+      "infrastructure": {
+        "compute": 1400.0,
+        "database": 1050.0,
+        "cache": 525.0,
+        "storage": 500.0,
+        "networking": 525.0,
+        "monitoring": 300,
+        "monthly_total": 4300.0,
+        "annual_total": 51600.0
+      },
+      "communications": {
+        "sms_volume": 400000.0,
+        "sms_cost": 3000.0,
+        "email_volume": 300000.0,
+        "email_cost": 300.0,
+        "voice_minutes": 50000.0,
+        "voice_cost": 750.0,
+        "platform_fees": 150,
+        "monthly_total": 4200.0
+      },
+      "payment_processing": {
+        "card_transactions": 75200.0,
+        "card_fees": 349680.0,
+        "ach_transactions": 50133.333333333336,
+        "ach_fees": 72693.33333333333,
+        "monthly_total": 422373.3333333333,
+        "effective_rate": 0.022466666666666666
+      },
+      "data_providers": {
+        "skip_traces": 30000.0,
+        "skip_cost": 22500.0,
+        "verifications": 10000.0,
+        "verify_cost": 1500.0,
+        "phone_validations": 200000,
+        "phone_cost": 2000.0,
+        "monthly_total": 26000.0
+      },
+      "compliance": {
+        "dnc_scrubbing": 500.0,
+        "call_recording": 2000.0,
+        "compliance_software": 1500,
+        "audit_reserve": 500,
+        "monthly_total": 4500.0
+      },
+      "insurance": {
+        "eo_annual": 77680.0,
+        "cyber_annual": 135360.0,
+        "general_liability_annual": 1500,
+        "do_annual": 3000,
+        "annual_total": 217540.0,
+        "monthly_total": 18128.333333333332
+      },
+      "saas": {
+        "slack": 187.5,
+        "google_workspace": 180,
+        "github": 315,
+        "linear": 120,
+        "one_password": 120,
+        "zendesk": 150,
+        "datadog": 300,
+        "vanta": 833,
+        "monthly_total": 2205.5
+      }
+    },
+    "totals": {
+      "monthly_operating_cost": 481707.1666666666,
+      "annual_operating_cost": 5780486.0,
+      "year_1_startup_cost": 27500.0,
+      "cost_per_account": 4.817071666666666,
+      "cost_per_dollar_collected": 0.025622721631205672
+    },
+    "profitability": {
+      "monthly_gross_profit": 5158292.833333333,
+      "gross_margin": 0.9145909278959811,
+      "annual_gross_profit": 61899514.0,
+      "breakeven_accounts": 8540.90721040189
+    }
+  },
+  "growth": {
+    "inputs": {
+      "states": [
+        "CA",
+        "TX",
+        "NY",
+        "FL",
+        "IL",
+        "PA",
+        "OH",
+        "GA",
+        "NC",
+        "NJ",
+        "MI",
+        "VA",
+        "WA",
+        "AZ",
+        "MA"
+      ],
+      "accounts_per_month": 500000,
+      "avg_balance": 400,
+      "recovery_rate": 0.47,
+      "commission_rate": 0.3,
+      "team_size": 45
+    },
+    "revenue": {
+      "total_balance_monthly": 200000000,
+      "collected_monthly": 94000000.0,
+      "revenue_monthly": 28200000.0,
+      "revenue_annual": 338400000.0
+    },
+    "costs": {
+      "licensing": {
+        "license_fees": 5600,
+        "bond_face_value": 170000,
+        "bond_premium_annual": 5100.0,
+        "annual_renewals": 2800,
+        "year_1_total": 10700.0,
+        "ongoing_annual": 7900.0
+      },
+      "infrastructure": {
+        "compute": 3200.0,
+        "database": 2400.0,
+        "cache": 1200.0,
+        "storage": 2500.0,
+        "networking": 750,
+        "monitoring": 300,
+        "monthly_total": 10350.0,
+        "annual_total": 124200.0
+      },
+      "communications": {
+        "sms_volume": 2000000.0,
+        "sms_cost": 15000.0,
+        "email_volume": 1500000.0,
+        "email_cost": 1500.0,
+        "voice_minutes": 250000.0,
+        "voice_cost": 3750.0,
+        "platform_fees": 150,
+        "monthly_total": 20400.0
+      },
+      "payment_processing": {
+        "card_transactions": 375999.99999999994,
+        "card_fees": 1748400.0,
+        "ach_transactions": 250666.66666666666,
+        "ach_fees": 363466.6666666667,
+        "monthly_total": 2111866.6666666665,
+        "effective_rate": 0.022466666666666666
+      },
+      "data_providers": {
+        "skip_traces": 150000.0,
+        "skip_cost": 112500.0,
+        "verifications": 50000.0,
+        "verify_cost": 7500.0,
+        "phone_validations": 1000000,
+        "phone_cost": 10000.0,
+        "monthly_total": 130000.0
+      },
+      "compliance": {
+        "dnc_scrubbing": 2500.0,
+        "call_recording": 10000.0,
+        "compliance_software": 3000,
+        "audit_reserve": 500,
+        "monthly_total": 16000.0
+      },
+      "insurance": {
+        "eo_annual": 348400.0,
+        "cyber_annual": 676800.0,
+        "general_liability_annual": 1500,
+        "do_annual": 3000,
+        "annual_total": 1029700.0,
+        "monthly_total": 85808.33333333333
+      },
+      "saas": {
+        "slack": 562.5,
+        "google_workspace": 540,
+        "github": 945,
+        "linear": 360,
+        "one_password": 360,
+        "zendesk": 150,
+        "datadog": 300,
+        "vanta": 833,
+        "monthly_total": 4050.5
+      }
+    },
+    "totals": {
+      "monthly_operating_cost": 2378475.5,
+      "annual_operating_cost": 28541706.0,
+      "year_1_startup_cost": 30700.0,
+      "cost_per_account": 4.756951,
+      "cost_per_dollar_collected": 0.02530293085106383
+    },
+    "profitability": {
+      "monthly_gross_profit": 25821524.5,
+      "gross_margin": 0.9156568971631206,
+      "annual_gross_profit": 309858294.0,
+      "breakeven_accounts": 42171.55141843972
+    }
+  }
+}
