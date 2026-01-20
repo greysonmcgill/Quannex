@@ -47,6 +47,8 @@ dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
+    "pytest-xdist>=3.5.0",
+    "hypothesis>=6.92.0",
     "mypy>=1.7.0",
     "ruff>=0.1.6",
     "black>=23.11.0",
@@ -68,4 +70,44 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["tests"]
+testpaths = ["tests", "quan/mlops"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--durations=10",
+]
+markers = [
+    "slow: marks tests as slow running (deselect with '-m \"not slow\"')",
+    "memory: marks tests that check memory usage",
+    "thread_safety: marks thread safety tests",
+    "integration: marks integration tests",
+    "property: marks property-based tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["quan"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/conftest.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]
+fail_under = 80
+show_missing = true
