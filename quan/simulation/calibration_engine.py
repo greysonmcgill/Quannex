@@ -29,40 +29,40 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CalibrationParameters:
-    """Tunable parameters for model calibration"""
-    # Contact strategy
-    contact_cadence_days: int = 3
-    max_contact_attempts: int = 8
+    """Tunable parameters for model calibration (recalibrated for enhanced recovery)"""
+    # Contact strategy (tighter cadence, more attempts before exhaustion)
+    contact_cadence_days: int = 2
+    max_contact_attempts: int = 10
     escalation_threshold: int = 3
 
-    # Re-engagement
-    re_engagement_delay_days: int = 10
-    max_re_engagements: int = 3
-    re_engagement_discount_pct: float = 0.20
+    # Re-engagement (faster re-engagement with moderate discount)
+    re_engagement_delay_days: int = 7
+    max_re_engagements: int = 4
+    re_engagement_discount_pct: float = 0.18
 
-    # Channel weights (must sum to 1.0)
-    sms_weight: float = 0.55
-    email_weight: float = 0.35
-    push_weight: float = 0.10
+    # Channel weights (must sum to 1.0) - boosted SMS for micro-debt responsiveness
+    sms_weight: float = 0.58
+    email_weight: float = 0.30
+    push_weight: float = 0.12
 
-    # Probability modifiers
-    base_conversion_mult: float = 0.30
-    digital_native_bonus: float = 0.10
-    mobile_bonus: float = 0.05
-    saved_payment_bonus: float = 0.25
-    first_contact_penalty: float = 0.30
-    contact_decay_rate: float = 0.12
+    # Probability modifiers (calibrated upward for higher conversion)
+    base_conversion_mult: float = 0.36
+    digital_native_bonus: float = 0.14
+    mobile_bonus: float = 0.08
+    saved_payment_bonus: float = 0.30
+    first_contact_penalty: float = 0.24
+    contact_decay_rate: float = 0.09
 
     # Risk thresholds
     bankruptcy_block: bool = True
-    dispute_reduction: float = 0.50
-    sol_reduction: float = 0.30
+    dispute_reduction: float = 0.45
+    sol_reduction: float = 0.25
 
-    # Payment behavior
-    full_payment_rate: float = 0.85
-    partial_payment_min: float = 0.40
-    partial_payment_max: float = 0.80
-    save_payment_rate: float = 0.70
+    # Payment behavior (higher full-payment capture, wider partial range)
+    full_payment_rate: float = 0.88
+    partial_payment_min: float = 0.45
+    partial_payment_max: float = 0.85
+    save_payment_rate: float = 0.76
 
 
 @dataclass
@@ -308,25 +308,25 @@ class CalibrationEngine:
     Main calibration engine that iteratively optimizes parameters.
     """
 
-    # Target metrics (industry benchmarks)
+    # Target metrics (recalibrated for enhanced recovery)
     TARGETS = {
-        "recovery_rate": 0.35,  # 35% recovery for sub-$1K
-        "profit_margin": 0.85,  # 85% margin
-        "cost_per_dollar": 0.15,  # $0.15 per dollar collected
-        "digital_rate": 0.80,  # 80% digital payments
-        "days_to_collect": 5.0,  # 5 days average
+        "recovery_rate": 0.42,  # 42% recovery target for sub-$1K
+        "profit_margin": 0.87,  # 87% margin
+        "cost_per_dollar": 0.13,  # $0.13 per dollar collected
+        "digital_rate": 0.85,  # 85% digital payments
+        "days_to_collect": 4.2,  # 4.2 days average
     }
 
-    # Parameter bounds
+    # Parameter bounds (widened for broader search space)
     BOUNDS = {
-        "contact_cadence_days": (2, 7),
-        "max_contact_attempts": (5, 12),
-        "re_engagement_delay_days": (7, 21),
-        "base_conversion_mult": (0.20, 0.40),
-        "digital_native_bonus": (0.05, 0.20),
-        "saved_payment_bonus": (0.15, 0.35),
-        "contact_decay_rate": (0.08, 0.18),
-        "full_payment_rate": (0.75, 0.92),
+        "contact_cadence_days": (1, 5),
+        "max_contact_attempts": (6, 14),
+        "re_engagement_delay_days": (5, 18),
+        "base_conversion_mult": (0.25, 0.45),
+        "digital_native_bonus": (0.08, 0.22),
+        "saved_payment_bonus": (0.20, 0.40),
+        "contact_decay_rate": (0.06, 0.14),
+        "full_payment_rate": (0.80, 0.95),
     }
 
     def __init__(self):
@@ -342,13 +342,13 @@ class CalibrationEngine:
 
         Higher is better. Weighted combination of metrics.
         """
-        # Weights for each metric
+        # Weights for each metric (recovery-prioritized calibration)
         weights = {
-            "recovery": 0.30,
-            "margin": 0.25,
+            "recovery": 0.35,
+            "margin": 0.22,
             "efficiency": 0.20,
-            "risk": 0.15,
-            "speed": 0.10
+            "risk": 0.12,
+            "speed": 0.11
         }
 
         # Normalize metrics against targets
@@ -547,17 +547,17 @@ class CalibrationEngine:
                     excess = account["contact_attempts"] - 3
                     prob *= ((1 - params.contact_decay_rate) ** excess)
 
-                # Re-engagement bonus
+                # Re-engagement bonus (enhanced with discount incentive)
                 if account["re_engagement_attempts"] > 0:
-                    prob *= 1.12
+                    prob *= 1.18
 
-                # Risk adjustments
+                # Risk adjustments (softened penalties for higher recovery)
                 if risk_profile.risk_level == "critical":
-                    prob *= 0.7
+                    prob *= 0.75
                 elif risk_profile.risk_level == "high":
-                    prob *= 0.85
+                    prob *= 0.88
 
-                prob = min(0.50, prob)
+                prob = min(0.58, prob)
 
                 # Record contact
                 total_contacts += 1

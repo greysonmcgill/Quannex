@@ -12,7 +12,7 @@ probability predictions. Implements multiple calibration methods including:
 
 Includes metrics, diagnostics, and automatic calibrator selection.
 
-Target: ECE < 0.03 and calibration slope/intercept near 1.0/0.0 on validation set.
+Target: ECE < 0.025 and calibration slope/intercept near 1.0/0.0 on validation set.
 """
 
 from abc import ABC, abstractmethod
@@ -64,10 +64,10 @@ class CalibrationMetrics:
     bin_confidences: list[float] = field(default_factory=list)
     bin_counts: list[int] = field(default_factory=list)
 
-    def meets_target(self, ece_threshold: float = 0.03) -> bool:
-        """Check if calibration meets target thresholds"""
-        slope_ok = 0.9 <= self.calibration_slope <= 1.1
-        intercept_ok = -0.05 <= self.calibration_intercept <= 0.05
+    def meets_target(self, ece_threshold: float = 0.025) -> bool:
+        """Check if calibration meets target thresholds (tightened for enhanced recovery)"""
+        slope_ok = 0.92 <= self.calibration_slope <= 1.08
+        intercept_ok = -0.04 <= self.calibration_intercept <= 0.04
         ece_ok = self.ece < ece_threshold
         return slope_ok and intercept_ok and ece_ok
 
