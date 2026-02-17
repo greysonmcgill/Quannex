@@ -9,6 +9,7 @@ from pathlib import Path
 
 from quan.config import settings
 from quan.ingestion import ingestion_router
+from quan.api import dashboard_router
 from quan.monitoring import get_metrics
 
 logger = logging.getLogger(__name__)
@@ -73,6 +74,7 @@ async def log_requests(request: Request, call_next):
 
 # Include routers
 app.include_router(ingestion_router, prefix="/api/v1")
+app.include_router(dashboard_router)
 
 
 @app.get("/")
