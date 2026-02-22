@@ -275,21 +275,25 @@ class QuanMetrics:
 
 
 class MetricsCollector:
-    """Collect and aggregate metrics"""
+    """Collect and aggregate metrics with thread safety"""
 
     def __init__(self):
+        import threading
         self._metrics: Dict[str, Any] = {}
         self._start_time = datetime.utcnow()
+        self._lock = threading.RLock()
 
     def increment(self, name: str, value: int = 1, labels: Dict = None) -> None:
-        """Increment a counter"""
+        """Increment a counter (thread-safe)"""
         key = self._make_key(name, labels)
-        self._metrics[key] = self._metrics.get(key, 0) + value
+        with self._lock:
+            self._metrics[key] = self._metrics.get(key, 0) + value
 
     def set_gauge(self, name: str, value: float, labels: Dict = None) -> None:
-        """Set a gauge value"""
+        """Set a gauge value (thread-safe)"""
         key = self._make_key(name, labels)
-        self._metrics[key] = value
+        with self._lock:
+            self._metrics[key] = value
 
     def record_histogram(
         self,
@@ -297,11 +301,13 @@ class MetricsCollector:
         value: float,
         labels: Dict = None,
     ) -> None:
-        """Record histogram value"""
+        """Record histogram value (thread-safe with bounded storage)"""
         key = self._make_key(name, labels)
-        if key not in self._metrics:
-            self._metrics[key] = []
-        self._metrics[key].append(value)
+        with self._lock:
+            if key not in self._metrics:
+                from collections import deque
+                self._metrics[key] = deque(maxlen=10000)  # Bounded to prevent memory leak
+            self._metrics[key].append(value)
 
     def _make_key(self, name: str, labels: Optional[Dict]) -> str:
         """Create metric key from name and labels"""
@@ -400,13 +406,19 @@ GRAFANA_DASHBOARD = {
 }
 
 
-# Global metrics instance
+# Global metrics instance with thread-safe initialization
 _metrics: Optional[QuanMetrics] = None
+_metrics_lock = None
 
 
 def get_metrics() -> QuanMetrics:
-    """Get global metrics instance"""
-    global _metrics
+    """Get global metrics instance (thread-safe double-check locking)"""
+    global _metrics, _metrics_lock
+    if _metrics_lock is None:
+        import threading
+        _metrics_lock = threading.Lock()
     if _metrics is None:
-        _metrics = QuanMetrics()
+        with _metrics_lock:
+            if _metrics is None:  # Double-check after acquiring lock
+                _metrics = QuanMetrics()
     return _metrics

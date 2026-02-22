@@ -4,7 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 
 from quan.config import settings

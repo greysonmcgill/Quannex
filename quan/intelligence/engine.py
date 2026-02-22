@@ -252,8 +252,9 @@ class CollectionIntelligence:
         try:
             from networkx.algorithms import community
             communities = community.louvain_communities(G)
-        except:
+        except (ImportError, nx.NetworkXError) as e:
             # Fallback to simple connected components
+            logger.warning(f"Louvain clustering unavailable, using connected components: {e}")
             communities = list(nx.connected_components(G))
 
         # Build segment mapping
