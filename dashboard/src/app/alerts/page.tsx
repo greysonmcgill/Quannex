@@ -228,7 +228,7 @@ export default function AlertsPage() {
               <div className="space-y-3">
                 {filteredAlerts.map((alert, index) => (
                   <div
-                    key={index}
+                    key={`${alert.severity}-${alert.message.slice(0, 20)}-${index}`}
                     className={cn(
                       "flex items-start gap-4 p-4 rounded-lg border transition-colors",
                       getSeverityColor(alert.severity),

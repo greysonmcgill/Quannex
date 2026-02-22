@@ -38,7 +38,7 @@ export function AlertList({ alerts, maxItems = 5 }: AlertListProps) {
     <div className="space-y-2">
       {displayAlerts.map((alert, index) => (
         <div
-          key={index}
+          key={`${alert.severity}-${alert.message.slice(0, 20)}-${index}`}
           className={cn(
             "flex items-start gap-3 p-3 rounded-lg border",
             getSeverityColor(alert.severity)

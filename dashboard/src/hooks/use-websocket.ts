@@ -147,10 +147,16 @@ export function useDashboardUpdates(
   const handleMessage = useCallback(
     (message: WebSocketMessage) => {
       if (message.type === "initial" || message.type === "update") {
-        const data = message.data as { health?: SystemHealth; alerts?: Alert[] };
-        if (data?.health) setHealth(data.health);
-        if (data?.alerts) setAlerts(data.alerts);
-        onUpdate?.(message.data as Partial<DashboardData>);
+        if (message.data && typeof message.data === "object") {
+          const data = message.data as Record<string, unknown>;
+          if ("health" in data && data.health) {
+            setHealth(data.health as SystemHealth);
+          }
+          if ("alerts" in data && Array.isArray(data.alerts)) {
+            setAlerts(data.alerts as Alert[]);
+          }
+          onUpdate?.(message.data as Partial<DashboardData>);
+        }
       }
     },
     [onUpdate]

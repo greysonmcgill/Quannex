@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Header } from "@/components/layout/header";
 import { KPICard } from "@/components/dashboard/kpi-card";
 import { ComplianceGauge } from "@/components/dashboard/compliance-gauge";
@@ -123,7 +123,7 @@ export default function CompliancePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const result = await fetchCompliance();
       setData(result);
@@ -133,11 +133,11 @@ export default function CompliancePage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);

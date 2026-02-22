@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Header } from "@/components/layout/header";
 import { KPICard } from "@/components/dashboard/kpi-card";
 import { PoolTable } from "@/components/dashboard/pool-table";
@@ -129,7 +129,7 @@ export default function TokenizationPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const result = await fetchTokenization();
       setData(result);
@@ -139,11 +139,11 @@ export default function TokenizationPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -320,9 +320,9 @@ export default function TokenizationPage() {
               <div className="border-t pt-4">
                 <h4 className="font-medium mb-3">Recent Trades</h4>
                 <div className="space-y-2">
-                  {tokenData.secondary_market.recent_trades.map((trade, index) => (
+                  {tokenData.secondary_market.recent_trades.map((trade) => (
                     <div
-                      key={index}
+                      key={`${trade.date}-${trade.tranche}-${trade.amount}`}
                       className="flex items-center justify-between p-2 bg-muted/30 rounded"
                     >
                       <div>

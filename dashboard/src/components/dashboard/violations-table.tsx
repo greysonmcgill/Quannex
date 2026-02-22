@@ -8,7 +8,7 @@ interface ViolationsTableProps {
 }
 
 export function ViolationsTable({ violations }: ViolationsTableProps) {
-  const getSeverityVariant = (severity: string) => {
+  const getSeverityVariant = (severity: string): "error" | "warning" | "secondary" => {
     switch (severity.toLowerCase()) {
       case "critical":
         return "error";
@@ -64,7 +64,7 @@ export function ViolationsTable({ violations }: ViolationsTableProps) {
                 {violation.description}
               </td>
               <td className="py-3 px-4 text-center">
-                <Badge variant={getSeverityVariant(violation.severity) as any}>
+                <Badge variant={getSeverityVariant(violation.severity)}>
                   {violation.severity}
                 </Badge>
               </td>

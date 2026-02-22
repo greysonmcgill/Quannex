@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Header } from "@/components/layout/header";
 import { KPICard } from "@/components/dashboard/kpi-card";
 import { AlertList } from "@/components/dashboard/alert-list";
@@ -119,7 +119,7 @@ export default function OverviewPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const result = await fetchDashboard();
       setData(result);
@@ -130,11 +130,11 @@ export default function OverviewPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);

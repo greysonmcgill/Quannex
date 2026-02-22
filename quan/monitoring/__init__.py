@@ -1,6 +1,6 @@
 """Monitoring and observability"""
 
-from .metrics import QuanMetrics, MetricsCollector
+from .metrics import QuanMetrics, MetricsCollector, get_metrics
 from .performance_monitor import (
     PerformanceMonitor,
     get_performance_monitor,
@@ -27,6 +27,7 @@ __all__ = [
     # Existing exports
     "QuanMetrics",
     "MetricsCollector",
+    "get_metrics",
     # Performance Monitor
     "PerformanceMonitor",
     "get_performance_monitor",

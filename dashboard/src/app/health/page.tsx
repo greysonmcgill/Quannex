@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Header } from "@/components/layout/header";
 import { SystemHealthComponent } from "@/components/dashboard/system-health";
 import { AlertList } from "@/components/dashboard/alert-list";
@@ -60,7 +60,7 @@ export default function HealthPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const result = await fetchHealth();
       setData(result);
@@ -70,7 +70,7 @@ export default function HealthPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -78,7 +78,7 @@ export default function HealthPage() {
     // Auto-refresh every 30 seconds
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [loadData]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);

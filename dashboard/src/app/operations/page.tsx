@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Header } from "@/components/layout/header";
 import { KPICard } from "@/components/dashboard/kpi-card";
 import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
@@ -58,7 +58,7 @@ export default function OperationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const result = await fetchOperations();
       setData(result);
@@ -68,11 +68,11 @@ export default function OperationsPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
