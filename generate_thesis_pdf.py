@@ -261,7 +261,7 @@ def build_cover_page(s):
         ["Author:", "Greyson McGill, Founder & CEO"],
         ["Organization:", "QUAN Recovery"],
         ["Contact:", "greyson@quanrecovery.com"],
-        ["Version:", "2.0"],
+        ["Version:", "3.0"],
         ["Date:", datetime.now().strftime('%B %Y')],
         ["Classification:", "Strategic Foundation Document"],
     ]
@@ -308,14 +308,16 @@ def build_table_of_contents(s):
         ("6.", "Behavioral Economics: The Psychology of Micro-Debt"),
         ("7.", "The Technological Remediation: Agentic AI and the Compute-Centric Model"),
         ("8.", "The Financial Remediation: Tokenization and DeFi Liquidity"),
-        ("9.", "Conclusion: The Inevitable Transition"),
+        ("9.", "Competitive Landscape: Why Incumbents Cannot Close the Gap"),
+        ("10.", "QUAN Unit Economics: The Cost Advantage in Practice"),
+        ("11.", "Conclusion: The Inevitable Transition"),
     ]
 
     for num, title in sections:
         elements.append(Paragraph(f"<b>{num}</b>  {title}", toc_style))
 
     elements.append(Spacer(1, 0.3 * inch))
-    elements.append(Paragraph("<b>Appendix:</b>  Works Cited (44 Sources)", toc_style))
+    elements.append(Paragraph("<b>Appendix:</b>  Works Cited (51 Sources)", toc_style))
 
     elements.append(PageBreak())
     return elements
@@ -375,8 +377,8 @@ def build_section_1(s):
         'safeguard', s['bullet'],
     ))
     elements.append(Paragraph(
-        '<b>3. Market Failure:</b> $400B+ in recoverable value abandoned annually due to negative '
-        'unit economics', s['bullet'],
+        '<b>3. Market Failure:</b> Over $150B in total consumer debt charged off annually [45], of which '
+        '$37.4B sits in a structural \"dead zone\" where recovery costs exceed the debt itself', s['bullet'],
     ))
 
     elements.append(Spacer(1, 0.15 * inch))
@@ -851,15 +853,229 @@ def build_section_8(s):
         s['body'],
     ))
 
+    elements.append(Paragraph("8.5 Regulatory Realism: The Path to Compliant Tokenization", s['h2']))
+    elements.append(Paragraph(
+        "Tokenized debt securities face real regulatory constraints that any credible implementation must address. "
+        "QUAN's approach is pragmatic, not utopian:",
+        s['body'],
+    ))
+    for item in [
+        "<b>SEC Classification:</b> Tokenized debt tranches are securities under the Howey test. QUAN's model "
+        "operates under Regulation D (506(c)) for accredited investors initially, with a Regulation A+ path "
+        "for broader access as track record develops [46]",
+        "<b>State Money Transmitter Licensing:</b> Smart contract payment flows trigger MTL requirements. "
+        "QUAN partners with licensed payment processors (Stripe, Dwolla) rather than building custodial infrastructure",
+        "<b>Bankruptcy Remoteness:</b> Assets must be legally isolated from the originator. QUAN uses "
+        "Delaware statutory trusts (the same SPV structure used in traditional ABS) with on-chain record-keeping, "
+        "not on-chain custody",
+        "<b>CFPB Servicing Rules:</b> AI-driven servicing must still comply with FDCPA validation notices "
+        "and dispute resolution timelines. QUAN's compliance engine (Section 7.2) is the critical enabler--code "
+        "enforces what traditional servicers handle manually",
+    ]:
+        elements.append(Paragraph(f"- {item}", s['bullet']))
+
+    elements.append(Spacer(1, 0.1 * inch))
+    elements.append(Paragraph(
+        "The key insight: QUAN does not need to revolutionize securities law. The legal frameworks for "
+        "securitization already exist and are well-tested. What QUAN brings is the ability to make the "
+        "underlying assets--micro-debts that are currently written off--economically viable through AI-driven "
+        "recovery, thereby creating a performant asset class where none existed before.",
+        s['body'],
+    ))
+
     elements.append(PageBreak())
     return elements
 
 
-def build_section_9(s):
-    """Section 9: Conclusion."""
+def build_section_9_competitive(s):
+    """Section 9: Competitive Landscape."""
     elements = []
     elements.append(Paragraph(
-        "9. Conclusion: The Inevitable Transition", s['h1'],
+        "9. Competitive Landscape: Why Incumbents Cannot Close the Gap", s['h1'],
+    ))
+    elements.append(divider())
+
+    elements.append(Paragraph(
+        "Several companies are applying technology to debt collection. None are architected to solve "
+        "the micro-debt unit economics problem that defines QUAN's addressable market.",
+        s['body'],
+    ))
+
+    elements.append(Paragraph("9.1 The Current Players", s['h2']))
+
+    comp_data = [
+        ["Company", "Approach", "Limitation", "Min. Viable Debt"],
+        ["TrueAccord\n(2013, $50M+)", "ML-optimized email/SMS\nsequencing for digital-first\ncollection", "Optimizes channel timing, not\ncost structure. Still charges\n15-40% contingency fees", "$200+"],
+        ["Symend\n(2016, $100M+)", "Behavioral science SaaS\nfor pre-delinquency\nengagement", "Sells to banks as a retention\ntool, not a collector. Does not\nown the recovery P&L", "N/A\n(SaaS model)"],
+        ["Indebted\n(2016, $47M)", "AI-powered digital\ncollection platform\n(Australia-first)", "Geographic focus on ANZ/UK.\nU.S. compliance engine not\nbuilt for 50-state complexity", "$100+"],
+        ["Prodigal\n(2018, $30M+)", "AI call analytics and\ncompliance monitoring\nfor existing agencies", "Augments humans, does not\nreplace them. The human agent\ncost floor remains", "$200+"],
+        ["Kredit (Skit.ai)\n(2021)", "AI voice agents for\noutbound collection\ncalls", "Voice-only channel. No\norchestration, no settlement\nengine, no tokenization layer", "$100+"],
+    ]
+    elements.extend(make_table(
+        comp_data, [1.2 * inch, 1.6 * inch, 1.7 * inch, 0.9 * inch],
+        "Table 5: Competitive Landscape -- AI Collections Entrants",
+        s,
+    ))
+
+    elements.append(Paragraph("9.2 Why QUAN Is Structurally Different", s['h2']))
+    elements.append(Paragraph(
+        "The competitors above share a common limitation: they optimize within the existing collections "
+        "architecture rather than replacing it. They make human agents more efficient, or automate a "
+        "single channel, or reduce churn before charge-off. None of them address the fundamental "
+        "question: <b>how do you profitably recover a $50 debt?</b>",
+        s['body'],
+    ))
+
+    elements.append(Spacer(1, 0.1 * inch))
+    elements.append(Paragraph("QUAN's moat is the integration of three layers that no competitor combines:", s['body']))
+    for item in [
+        "<b>Layer 1 -- Autonomous Full-Lifecycle Recovery:</b> Not just contact optimization, but end-to-end "
+        "account management from ingestion through settlement, with zero human labor below $1,000. "
+        "Multi-channel orchestration (voice, SMS, email, digital) with a compliance engine that enforces "
+        "FDCPA/TCPA/Reg F and all 50 state laws programmatically",
+        "<b>Layer 2 -- Vertical Intelligence:</b> ML models trained specifically on micro-debt behavioral "
+        "patterns (payment willingness scoring, channel responsiveness, settlement threshold prediction). "
+        "Not a generic LLM wrapper--a purpose-built recovery intelligence engine with 147-dimension "
+        "feature space for debtor segmentation",
+        "<b>Layer 3 -- Liquidity Infrastructure:</b> Tokenization of recovered and recovering portfolios "
+        "into tradeable instruments, creating a secondary market for an asset class that currently has "
+        "zero liquidity. This is the true platform play--QUAN becomes the exchange, not just the servicer",
+    ]:
+        elements.append(Paragraph(f"- {item}", s['bullet']))
+
+    elements.append(Spacer(1, 0.1 * inch))
+    elements.append(Paragraph(
+        "The result: QUAN does not compete with TrueAccord for the same $5,000 credit card portfolio. "
+        "QUAN operates in the $37.4B dead zone that every other player has written off as unrecoverable.",
+        s['body'],
+    ))
+
+    elements.append(PageBreak())
+    return elements
+
+
+def build_section_10_unit_economics(s):
+    """Section 10: QUAN Unit Economics."""
+    elements = []
+    elements.append(Paragraph(
+        "10. QUAN Unit Economics: The Cost Advantage in Practice", s['h1'],
+    ))
+    elements.append(divider())
+
+    elements.append(Paragraph(
+        "Section 3 demonstrated that legacy collections break even only above ~$250. "
+        "QUAN's architecture fundamentally reshapes this equation.",
+        s['body'],
+    ))
+
+    elements.append(Paragraph("10.1 QUAN's Cost-to-Collect Per Account", s['h2']))
+    elements.append(Paragraph(
+        "Based on current API pricing for AI voice, SMS, and email channels, and our platform's "
+        "orchestration efficiency, QUAN's projected fully-loaded cost per account is:",
+        s['body'],
+    ))
+
+    cost_data = [
+        ["Cost Component", "Per Account", "Notes"],
+        ["AI Voice (avg 2.3 min)", "$0.35", "Retell/Vapi at $0.08-0.15/min\n+ TTS/STT overhead"],
+        ["SMS Sequence (avg 4 msgs)", "$0.08", "Twilio at $0.02/msg"],
+        ["Email Sequence (avg 3 msgs)", "$0.03", "SendGrid at $0.01/msg"],
+        ["ML Scoring + Routing", "$0.02", "Amortized GPU inference"],
+        ["Compliance Engine", "$0.01", "Per-account rule evaluation"],
+        ["Payment Processing", "$0.45", "Stripe 2.9% on avg $15 recovery"],
+        ["Infrastructure (amort.)", "$0.06", "Cloud compute per account"],
+        ["TOTAL", "$1.00", "Fully loaded cost per account"],
+    ]
+    elements.extend(make_table(
+        cost_data, [1.8 * inch, 1.0 * inch, 2.6 * inch],
+        "Table 6: QUAN Projected Cost-to-Collect Per Account",
+        s,
+    ))
+
+    elements.append(Paragraph("10.2 Break-Even Comparison: Legacy vs. QUAN", s['h2']))
+
+    be_data = [
+        ["Debt Balance", "Legacy Break-Even\nRecovery Rate", "QUAN Break-Even\nRecovery Rate", "QUAN Margin\nat 15% Recovery"],
+        ["$500", "9.4%", "0.13%", "$74.00 (98.7%)"],
+        ["$200", "23.5%", "0.33%", "$29.00 (96.7%)"],
+        ["$100", "47.0%", "0.67%", "$14.00 (93.3%)"],
+        ["$50", "94.0%", "1.33%", "$6.50 (86.7%)"],
+        ["$25", "Impossible", "2.67%", "$2.75 (73.3%)"],
+    ]
+    elements.extend(make_table(
+        be_data, [0.9 * inch, 1.4 * inch, 1.4 * inch, 1.6 * inch],
+        "Table 7: Break-Even Analysis -- Legacy Model vs. QUAN at $1.00/account CTC",
+        s,
+    ))
+
+    elements.append(Spacer(1, 0.1 * inch))
+    elements.append(Paragraph(
+        "At $1.00 per account, QUAN breaks even at a 1.33% recovery rate on a $50 debt--compared "
+        "to the 94% required by legacy. Even conservative 15% recovery rates yield 87%+ gross margins "
+        "on micro-debt, transforming a structurally impossible business into a high-margin one.",
+        s['body'],
+    ))
+
+    elements.append(Paragraph("10.3 Portfolio-Level Projections", s['h2']))
+    elements.append(Paragraph(
+        "Modeled against the $37.4B dead zone market (Section 3.5), assuming QUAN captures "
+        "1% of addressable volume in Year 1 with a blended 12% recovery rate:",
+        s['body'],
+    ))
+
+    portfolio_data = [
+        ["Metric", "Year 1 Projection", "Year 3 Projection"],
+        ["Accounts Under Management", "2.5M", "25M"],
+        ["Face Value of Portfolios", "$374M", "$3.74B"],
+        ["Blended Recovery Rate", "12%", "18%"],
+        ["Gross Recovery Revenue", "$44.9M", "$673M"],
+        ["Total Operating Cost", "$2.5M", "$25M"],
+        ["Gross Margin", "$42.4M (94.4%)", "$648M (96.3%)"],
+        ["Revenue (30% contingency)", "$13.5M", "$202M"],
+    ]
+    elements.extend(make_table(
+        portfolio_data, [1.8 * inch, 1.5 * inch, 1.5 * inch],
+        "Table 8: QUAN Portfolio-Level Financial Projections",
+        s,
+    ))
+
+    elements.append(Paragraph("10.4 Early Validation", s['h2']))
+    elements.append(Paragraph(
+        "QUAN's platform simulation environment has processed 1M+ synthetic accounts across "
+        "10 debt categories, validating the core architecture:",
+        s['body'],
+    ))
+    for item in [
+        "<b>Simulation Results:</b> 6 consumer behavioral archetypes (Prompt Payer, Negotiator, "
+        "Plan Keeper, Plan Breaker, Ghost, Hostile) modeled across BNPL, medical, telecom, "
+        "subscription, utility, and other micro-debt categories",
+        "<b>Platform Operational:</b> Full-stack application with FastAPI backend, Next.js dashboard, "
+        "real-time analytics, and compliance-first account pipeline running in local and containerized "
+        "environments",
+        "<b>ML Pipeline Active:</b> Payment probability prediction, debtor segmentation (graph-based), "
+        "channel optimization (multi-armed bandit), and settlement recommendation engines operational "
+        "with synthetic data",
+        "<b>Compliance Engine Built:</b> Programmatic FDCPA, TCPA, Regulation F, and 50-state "
+        "rule enforcement with contact frequency governors and consent tracking",
+    ]:
+        elements.append(Paragraph(f"- {item}", s['bullet']))
+
+    elements.append(Spacer(1, 0.1 * inch))
+    elements.append(Paragraph(
+        "<b>Next Milestone:</b> Live pilot with a single BNPL originator processing real charged-off "
+        "accounts to validate recovery rates against simulation projections. Target: Q3 2026.",
+        s['body'],
+    ))
+
+    elements.append(PageBreak())
+    return elements
+
+
+def build_section_11_conclusion(s):
+    """Section 11: Conclusion."""
+    elements = []
+    elements.append(Paragraph(
+        "11. Conclusion: The Inevitable Transition", s['h1'],
     ))
     elements.append(divider())
 
@@ -895,8 +1111,9 @@ def build_section_9(s):
         s['body'],
     ))
     elements.append(Paragraph(
-        "The $400B+ annually written off is not \"bad debt.\" It is <b>orphaned debt</b>--economically "
-        "recoverable value that the existing system has structurally abandoned.",
+        "The $37.4B annually stranded in the structural dead zone is not \"bad debt.\" It is "
+        "<b>orphaned debt</b>--economically recoverable value that the existing system has "
+        "structurally abandoned.",
         s['body'],
     ))
     elements.append(Paragraph(
@@ -967,6 +1184,13 @@ def build_works_cited(s):
         "Centrifuge RWA - IEEE Transmitter",
         "Centrifuge V2 - Centrifuge Docs",
         "DeFi Weekly: Centrifuge -- Real-World Assets On-Chain - Coinmonks / Medium",
+        "Charge-Off and Delinquency Rates on Loans - Federal Reserve Board (2025)",
+        "Regulation D -- Rules Governing the Limited Offer and Sale of Securities - SEC",
+        "TrueAccord: Company Profile and Funding History - Crunchbase",
+        "Symend: Company Profile and Funding History - Crunchbase",
+        "InDebted: Company Profile and Funding History - Crunchbase",
+        "Prodigal Technologies: Company Profile and Funding History - Crunchbase",
+        "Retell AI: Voice AI Platform Pricing and Benchmarks - Retell AI (2025)",
     ]
 
     for i, cite in enumerate(citations, 1):
@@ -1006,7 +1230,9 @@ def generate_thesis_pdf(output_dir: str = "./output") -> str:
     elements.extend(build_section_6(s))
     elements.extend(build_section_7(s))
     elements.extend(build_section_8(s))
-    elements.extend(build_section_9(s))
+    elements.extend(build_section_9_competitive(s))
+    elements.extend(build_section_10_unit_economics(s))
+    elements.extend(build_section_11_conclusion(s))
     elements.extend(build_works_cited(s))
 
     doc.build(elements)
