@@ -651,7 +651,8 @@ def _avg_time_in_stage(db: Session, stage: str) -> str:
     rows = db.scalars(select(Account).where(Account.status == stage)).all()
     if not rows:
         return "N/A"
-    deltas = [_now() - (account.updated_at or account.created_at) for account in rows]
+    now = _now()
+    deltas = [now - (account.updated_at or account.created_at) for account in rows]
     avg_seconds = sum(delta.total_seconds() for delta in deltas) / len(deltas)
     return _format_duration(avg_seconds)
 
@@ -747,7 +748,7 @@ def _rating_for_score(score: float) -> str:
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _iso_now() -> str:
