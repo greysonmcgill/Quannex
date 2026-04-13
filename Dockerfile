@@ -10,7 +10,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-COPY pyproject.toml ./
+COPY pyproject.toml README.md alembic.ini ./
+COPY quan/ ./quan/
+COPY alembic/ ./alembic/
+COPY scripts/ ./scripts/
 RUN pip install --no-cache-dir build && \
     pip install --no-cache-dir .
 
@@ -28,6 +31,9 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY quan/ ./quan/
+COPY alembic/ ./alembic/
+COPY scripts/ ./scripts/
+COPY alembic.ini README.md ./
 
 # Set ownership
 RUN chown -R quan:quan /app

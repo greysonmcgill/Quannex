@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # Database
-    database_url: str = "postgresql+asyncpg://quan:quan@localhost:5432/quan"
+    database_url: str = "sqlite:///./quan.db"
     redis_url: str = "redis://localhost:6379"
 
     # Kafka

@@ -27,6 +27,14 @@ export function TrancheChart({ tranches }: TrancheChartProps) {
     0
   );
 
+  if (totalValue === 0) {
+    return (
+      <div className="py-10 text-center text-sm text-muted-foreground">
+        Tranches will be derived once there is account-level portfolio value to allocate.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Stacked bar */}

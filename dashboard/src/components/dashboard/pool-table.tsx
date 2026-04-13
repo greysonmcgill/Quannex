@@ -9,6 +9,14 @@ interface PoolTableProps {
 }
 
 export function PoolTable({ pools }: PoolTableProps) {
+  if (pools.length === 0) {
+    return (
+      <div className="py-10 text-center text-sm text-muted-foreground">
+        Pools will appear here once accounts have been uploaded and grouped.
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full">

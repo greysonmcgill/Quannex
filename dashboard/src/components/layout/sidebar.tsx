@@ -12,6 +12,8 @@ import {
   Activity,
   Bell,
   HelpCircle,
+  FolderUp,
+  Users,
 } from "lucide-react";
 
 const navigation = [
@@ -20,6 +22,8 @@ const navigation = [
   { name: "Operations", href: "/operations", icon: Settings2 },
   { name: "Compliance", href: "/compliance", icon: Shield },
   { name: "Tokenization", href: "/tokenization", icon: Coins },
+  { name: "Upload", href: "/upload", icon: FolderUp },
+  { name: "Accounts", href: "/accounts", icon: Users },
 ];
 
 const secondaryNav = [

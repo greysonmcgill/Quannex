@@ -9,7 +9,7 @@ from pathlib import Path
 from quan.config import settings
 from quan.logging_config import configure_logging, get_logger
 from quan.ingestion import ingestion_router
-from quan.api import dashboard_router
+from quan.api import accounts_router, dashboard_router, portfolio_router
 from quan.monitoring import get_metrics
 
 # Configure logging at module load
@@ -56,7 +56,11 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.debug else ["https://quanrecovery.com"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://quanrecovery.com",
+    ] if not settings.debug and settings.environment != "development" else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -77,6 +81,8 @@ async def log_requests(request: Request, call_next):
 # Include routers
 app.include_router(ingestion_router, prefix="/api/v1")
 app.include_router(dashboard_router)
+app.include_router(portfolio_router)
+app.include_router(accounts_router)
 
 
 @app.get("/")

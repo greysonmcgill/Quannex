@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { DashboardData, SystemHealth, Alert } from "@/lib/api";
+import { DashboardData, SystemHealth, Alert, getWebSocketUrl } from "@/lib/api";
 
 interface WebSocketMessage {
   type: "initial" | "update" | "metric_update" | "pong";
@@ -26,7 +26,7 @@ interface UseWebSocketReturn {
 }
 
 export function useWebSocket({
-  url = `ws://${typeof window !== "undefined" ? window.location.host : "localhost:8000"}/api/v1/dashboard/ws`,
+  url = getWebSocketUrl("/api/v1/dashboard/ws"),
   onMessage,
   reconnectInterval = 5000,
   maxReconnectAttempts = 5,
