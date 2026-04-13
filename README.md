@@ -1,4 +1,4 @@
-# QUAN Recovery
+# Quannex
 
 AI-Powered Micro-Debt Collection Platform
 
