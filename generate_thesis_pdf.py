@@ -307,7 +307,7 @@ def build_table_of_contents(s):
         ("5.", "The Data Infrastructure Void: Metro 2 and the \"Credit Invisible\""),
         ("6.", "Behavioral Economics: The Psychology of Micro-Debt"),
         ("7.", "The Technological Remediation: Agentic AI and the Compute-Centric Model"),
-        ("8.", "The Financial Remediation: Tokenization and DeFi Liquidity"),
+        ("8.", "The Platform Roadmap: From Recovery Engine to Liquidity Infrastructure"),
         ("9.", "Competitive Landscape: Why Incumbents Cannot Close the Gap"),
         ("10.", "Quannex Unit Economics: The Cost Advantage in Practice"),
         ("11.", "Conclusion: The Inevitable Transition"),
@@ -793,93 +793,144 @@ def build_section_7(s):
 
 
 def build_section_8(s):
-    """Section 8: Tokenization and DeFi."""
+    """Section 8: Platform Roadmap -- From Recovery to Liquidity."""
     elements = []
     elements.append(Paragraph(
-        "8. The Financial Remediation: Tokenization and DeFi Liquidity", s['h1'],
+        "8. The Platform Roadmap: From Recovery Engine to Liquidity Infrastructure", s['h1'],
     ))
     elements.append(divider())
 
     elements.append(Paragraph(
-        "While AI solves the recovery problem, it does not solve the liquidity problem for lenders "
-        "holding millions in non-performing micro-loans. The solution: securitization via blockchain.",
+        "AI solves the recovery problem. But the full market opportunity requires solving the "
+        "liquidity problem as well--lenders holding millions in non-performing micro-loans need "
+        "a way to recycle capital. Quannex's roadmap addresses both in sequence, "
+        "building credibility at each phase before expanding scope.",
         s['body'],
     ))
 
-    elements.append(Paragraph("8.1 The Illiquidity of NPL Portfolios", s['h2']))
-    elements.append(Paragraph(
-        "Selling charged-off BNPL debt is slow and opaque. The bid-ask spread is massive because "
-        "buyers don't trust data quality and can't easily verify assets.",
-        s['body'],
-    ))
-
-    elements.append(Paragraph("8.2 Real-World Asset (RWA) Tokenization", s['h2']))
-    elements.append(Paragraph(
-        "Protocols like <b>Centrifuge</b> move securitization on-chain. Each debt (or batch) is "
-        "minted as an NFT with immutable metadata (origination, payment history, risk score). "
-        "Buyers can audit entire portfolio performance in real-time, eliminating the \"lemon market\" problem.",
-        s['body'],
-    ))
-
-    elements.append(Paragraph("8.3 The Tinlake Tranche Model", s['h2']))
-    for item in [
-        "<b>DROP Token (Senior Tranche):</b> Paid first, lower yield (5-8%), protected against first-wave defaults",
-        "<b>TIN Token (Junior Tranche):</b> First-loss position, upside yield (12-20%), paid after DROP holders satisfied",
-        "<b>Algorithmic Waterfall:</b> Smart contract auto-routes repayments. No servicer fees or delays. The code is the servicer",
-    ]:
-        elements.append(Paragraph(f"- {item}", s['bullet']))
-
-    # Table 4: Tokenized Debt Stack
-    ts_data = [
-        ["Layer", "Function", "Technology / Mechanism"],
-        ["Asset Originator", "Originates the loan\n(BNPL, Invoice)", "Fintech App / Lender"],
-        ["Tokenization", "Mints NFT representing\nasset/collateral", "Centrifuge P2P Protocol"],
-        ["Pooling", "Aggregates NFTs into\nsmart contract pool", "Tinlake / Centrifuge Chain"],
-        ["Tranching", "Splits risk into Senior\n(DROP) and Junior (TIN)", "Smart Contract Logic"],
-        ["Liquidity", "Provides capital against\ntokens", "DeFi Protocols\n(MakerDAO, Aave)"],
-        ["Servicing", "Collects payments,\ndistributes to tranches", "Automated Waterfall\nContract"],
+    # Phase roadmap table
+    phase_data = [
+        ["Phase", "Focus", "Timeline", "Revenue Model"],
+        ["Phase 1\n(Launch)", "Autonomous AI\nRecovery Engine", "Now - Q4 2026", "Contingency fee\n(% of recovered $)"],
+        ["Phase 2\n(Scale)", "Portfolio Analytics\n& Secondary Market Data", "2027", "SaaS subscription +\ndata licensing"],
+        ["Phase 3\n(Platform)", "Tokenized Debt\nInstruments", "2028+", "Marketplace fees +\nservicing revenue"],
     ]
     elements.extend(make_table(
-        ts_data, [1.2 * inch, 2.0 * inch, 2.2 * inch],
-        "Table 4: The Tokenized Debt Stack (Centrifuge/Tinlake Model)",
+        phase_data, [0.9 * inch, 1.6 * inch, 1.2 * inch, 1.7 * inch],
+        "Table 4: Quannex Platform Roadmap",
         s,
     ))
 
-    elements.append(Paragraph("8.4 DeFi Integration", s['h2']))
+    elements.append(Paragraph("8.1 Phase 1: Autonomous Recovery (Current Focus)", s['h2']))
     elements.append(Paragraph(
-        "This infrastructure lets BNPL lenders access global DeFi liquidity. Originate loans, "
-        "tokenize them, pledge as collateral to MakerDAO or Aave, and borrow stablecoins (USDC) "
-        "instantly. This \"capital velocity\" recycles funds far faster than traditional bank facilities.",
-        s['body'],
-    ))
-
-    elements.append(Paragraph("8.5 Regulatory Realism: The Path to Compliant Tokenization", s['h2']))
-    elements.append(Paragraph(
-        "Tokenized debt securities face real regulatory constraints that any credible implementation must address. "
-        "Quannex's approach is pragmatic, not utopian:",
+        "The immediate product is the agentic AI recovery engine described in Section 7. This is the "
+        "core business: ingest micro-debt portfolios, autonomously recover value at $1.00/account, and "
+        "charge a contingency fee on recovered dollars. Phase 1 generates revenue from Day 1, validates "
+        "recovery rates against simulation projections, and builds the performance track record that "
+        "unlocks everything downstream.",
         s['body'],
     ))
     for item in [
-        "<b>SEC Classification:</b> Tokenized debt tranches are securities under the Howey test. Quannex's model "
-        "operates under Regulation D (506(c)) for accredited investors initially, with a Regulation A+ path "
-        "for broader access as track record develops [46]",
-        "<b>State Money Transmitter Licensing:</b> Smart contract payment flows trigger MTL requirements. "
-        "Quannex partners with licensed payment processors (Stripe, Dwolla) rather than building custodial infrastructure",
-        "<b>Bankruptcy Remoteness:</b> Assets must be legally isolated from the originator. Quannex uses "
-        "Delaware statutory trusts (the same SPV structure used in traditional ABS) with on-chain record-keeping, "
-        "not on-chain custody",
-        "<b>CFPB Servicing Rules:</b> AI-driven servicing must still comply with FDCPA validation notices "
-        "and dispute resolution timelines. Quannex's compliance engine (Section 7.2) is the critical enabler--code "
-        "enforces what traditional servicers handle manually",
+        "<b>Target Clients:</b> BNPL originators, subscription platforms, telecom/utility providers "
+        "with charged-off micro-balances they currently write off",
+        "<b>Delivery Model:</b> SaaS platform -- clients upload portfolios via CSV or API, Quannex's "
+        "engine handles the full recovery lifecycle autonomously",
+        "<b>Key Milestone:</b> Live pilot with a BNPL originator processing real charged-off accounts "
+        "(Target: Q3 2026)",
+    ]:
+        elements.append(Paragraph(f"- {item}", s['bullet']))
+
+    elements.append(Paragraph("8.2 Phase 2: Portfolio Analytics and Secondary Market Data", s['h2']))
+    elements.append(Paragraph(
+        "As Quannex processes millions of accounts, it accumulates something no one else has: "
+        "granular, real-time recovery performance data on micro-debt asset classes. This data "
+        "becomes a product itself.",
+        s['body'],
+    ))
+    for item in [
+        "<b>Recovery Benchmarks:</b> Actual recovery rates by debt type, balance tier, geography, "
+        "debtor segment, and contact channel -- priced and sold to debt buyers, originators, and "
+        "credit risk teams",
+        "<b>Portfolio Valuation:</b> AI-powered pricing models for NPL portfolios based on observed "
+        "recovery curves, replacing the opaque broker-driven bid process",
+        "<b>Buyer Marketplace:</b> A data-transparent marketplace where debt buyers can evaluate "
+        "portfolios with auditable performance metrics before purchasing",
     ]:
         elements.append(Paragraph(f"- {item}", s['bullet']))
 
     elements.append(Spacer(1, 0.1 * inch))
     elements.append(Paragraph(
-        "The key insight: Quannex does not need to revolutionize securities law. The legal frameworks for "
-        "securitization already exist and are well-tested. What Quannex brings is the ability to make the "
-        "underlying assets--micro-debts that are currently written off--economically viable through AI-driven "
-        "recovery, thereby creating a performant asset class where none existed before.",
+        "Phase 2 transforms Quannex from a recovery tool into a data infrastructure company. "
+        "The transition is organic: the same accounts processed in Phase 1 generate the data "
+        "that powers Phase 2.",
+        s['body'],
+    ))
+
+    elements.append(Paragraph("8.3 Phase 3: Tokenized Debt Instruments (Future Platform)", s['h2']))
+    elements.append(Paragraph(
+        "With auditable recovery track records from Phases 1 and 2, Quannex can facilitate the "
+        "securitization of micro-debt portfolios into tradeable instruments--creating liquidity for "
+        "an asset class that currently has none.",
+        s['body'],
+    ))
+
+    elements.append(Paragraph("The Mechanism", s['h3']))
+    elements.append(Paragraph(
+        "Protocols like <b>Centrifuge</b> have demonstrated on-chain securitization for real-world assets. "
+        "Each debt pool is represented as an NFT with immutable metadata (origination, payment history, "
+        "AI-predicted recovery score). Buyers can audit portfolio performance in real-time, eliminating "
+        "the \"lemon market\" problem that plagues traditional NPL sales.",
+        s['body'],
+    ))
+    for item in [
+        "<b>Senior Tranche (DROP):</b> Paid first, lower yield (5-8%), protected against first-wave defaults",
+        "<b>Junior Tranche (TIN):</b> First-loss position, upside yield (12-20%), paid after senior holders",
+        "<b>Algorithmic Waterfall:</b> Smart contract auto-routes repayments -- the code is the servicer",
+    ]:
+        elements.append(Paragraph(f"- {item}", s['bullet']))
+
+    # Table: Tokenized Debt Stack
+    ts_data = [
+        ["Layer", "Function", "Technology / Mechanism"],
+        ["Asset Originator", "Originates the loan\n(BNPL, Invoice)", "Fintech App / Lender"],
+        ["Recovery Layer", "AI-driven collection\n+ performance data", "Quannex Platform"],
+        ["Tokenization", "Mints NFT representing\nasset/collateral", "Centrifuge P2P Protocol"],
+        ["Pooling", "Aggregates NFTs into\nsmart contract pool", "Tinlake / Centrifuge Chain"],
+        ["Tranching", "Splits risk into Senior\nand Junior tranches", "Smart Contract Logic"],
+        ["Liquidity", "Provides capital against\ntokens", "DeFi Protocols\n(MakerDAO, Aave)"],
+    ]
+    elements.extend(make_table(
+        ts_data, [1.2 * inch, 2.0 * inch, 2.2 * inch],
+        "Table 5: The Tokenized Debt Stack with Quannex Recovery Layer",
+        s,
+    ))
+
+    elements.append(Paragraph("Regulatory Path", s['h3']))
+    elements.append(Paragraph(
+        "Tokenized debt securities face real regulatory constraints. Quannex's approach is pragmatic:",
+        s['body'],
+    ))
+    for item in [
+        "<b>SEC Classification:</b> Tokenized tranches are securities under the Howey test. Quannex's Phase 3 "
+        "operates under Regulation D (506(c)) for accredited investors initially, with a Regulation A+ path "
+        "for broader access as track record develops [46]",
+        "<b>Money Transmitter Licensing:</b> Smart contract payment flows trigger MTL requirements. "
+        "Quannex partners with licensed payment processors rather than building custodial infrastructure",
+        "<b>Bankruptcy Remoteness:</b> Assets are legally isolated via Delaware statutory trusts "
+        "(the same SPV structure used in traditional ABS) with on-chain record-keeping, not on-chain custody",
+        "<b>CFPB Servicing:</b> AI-driven servicing must still comply with FDCPA validation notices "
+        "and dispute resolution timelines. Quannex's compliance engine (Section 7.2) enforces this programmatically",
+    ]:
+        elements.append(Paragraph(f"- {item}", s['bullet']))
+
+    elements.append(Spacer(1, 0.1 * inch))
+    elements.append(Paragraph("8.4 Why the Phases Must Be Sequential", s['h2']))
+    elements.append(Paragraph(
+        "Tokenization without proven recovery is vaporware. The legal frameworks for securitization "
+        "already exist and are well-tested--the missing ingredient is a <b>performant underlying asset</b>. "
+        "Micro-debts that recover at 0% are worthless to tokenize. Micro-debts that recover at 12-18% "
+        "through Quannex's AI engine become a viable, data-rich asset class. Phase 1 creates the asset. "
+        "Phase 2 proves its value. Phase 3 makes it liquid.",
         s['body'],
     ))
 
