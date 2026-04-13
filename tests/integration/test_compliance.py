@@ -18,8 +18,6 @@ from decimal import Decimal
 from typing import Dict, List, Any
 import uuid
 
-import sys
-sys.path.insert(0, '/home/user/Quan')
 
 
 # =============================================================================

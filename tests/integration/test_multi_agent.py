@@ -21,8 +21,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 import time
 
-import sys
-sys.path.insert(0, '/home/user/Quan')
 
 
 # =============================================================================

@@ -5,8 +5,6 @@ QUAN's targeted sweet spot - accounts large agencies ignore.
 """
 
 import asyncio
-import sys
-sys.path.insert(0, '/home/user/Quan')
 
 from quan.simulation.sub_1k_simulation import run_sub1k_simulation
 

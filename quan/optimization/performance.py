@@ -28,16 +28,13 @@ from decimal import Decimal, ROUND_HALF_UP
 from enum import Enum
 from typing import Dict, List, Optional, Any, Tuple, Set, Callable, Union
 from collections import defaultdict
-import logging
-import sys
 import copy
 from functools import lru_cache
 import heapq
 
-sys.path.insert(0, '/home/user/Quan')
+from quan.logging_config import get_logger
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # =============================================================================

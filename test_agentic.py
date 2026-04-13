@@ -2,8 +2,6 @@
 """Quick test for agentic controller"""
 
 import asyncio
-import sys
-sys.path.insert(0, '/home/user/Quan')
 
 from quan.agents.agentic_controller import AgenticController, AutonomyLevel
 

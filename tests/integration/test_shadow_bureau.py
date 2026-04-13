@@ -19,8 +19,6 @@ from typing import Dict, List, Any
 import uuid
 import hashlib
 
-import sys
-sys.path.insert(0, '/home/user/Quan')
 
 from quan.shadow_bureau.live_ledger import (
     LiveLedger, DebtCategory, PaymentBehavior, RiskTier,

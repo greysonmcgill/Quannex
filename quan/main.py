@@ -4,15 +4,17 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
-import logging
 from pathlib import Path
 
 from quan.config import settings
+from quan.logging_config import configure_logging, get_logger
 from quan.ingestion import ingestion_router
 from quan.api import dashboard_router
 from quan.monitoring import get_metrics
 
-logger = logging.getLogger(__name__)
+# Configure logging at module load
+configure_logging()
+logger = get_logger(__name__)
 
 
 @asynccontextmanager

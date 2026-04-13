@@ -6,11 +6,8 @@ Runs collections simulation on 10,000 accounts across all debt types.
 """
 
 import asyncio
-import sys
 from decimal import Decimal
 from datetime import datetime
-
-sys.path.insert(0, '/home/user/Quan')
 
 from quan.models.micro_loan_universe import DebtType, MicroLoanUniverseGenerator, MICRO_LOAN_UNIVERSE
 from quan.simulation.full_scale_simulation import ScaleConfig, FullScaleSimulator

@@ -6,7 +6,6 @@ Deploys maximum agents to calibrate pipeline for real-world conditions.
 """
 
 import asyncio
-import sys
 sys.path.insert(0, '.')
 
 from quan.simulation.engine import SimulationEngine, SimulationConfig

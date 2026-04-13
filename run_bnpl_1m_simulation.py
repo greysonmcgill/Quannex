@@ -7,12 +7,10 @@ with balances capped at $500.
 """
 
 import asyncio
-import sys
 import random
 from decimal import Decimal
 from datetime import datetime
 
-sys.path.insert(0, '/home/user/Quan')
 
 from quan.models.micro_loan_universe import DebtType, MICRO_LOAN_UNIVERSE
 from quan.simulation.full_scale_simulation import ScaleConfig, FullScaleSimulator

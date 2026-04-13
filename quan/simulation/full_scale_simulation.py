@@ -14,20 +14,15 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Any, Tuple
-import logging
-import sys
 import os
 
-# Add path for imports
-sys.path.insert(0, '/home/user/Quan')
-
+from quan.logging_config import get_logger
 from quan.models.micro_loan_universe import (
     MicroLoanUniverseGenerator, DebtType, MICRO_LOAN_UNIVERSE,
     DebtTypeProfile, get_market_summary
 )
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass

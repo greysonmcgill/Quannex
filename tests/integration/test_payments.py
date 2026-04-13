@@ -18,9 +18,6 @@ from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Any
 import uuid
 
-import sys
-sys.path.insert(0, '/home/user/Quan')
-
 
 # =============================================================================
 # PAYMENT PROCESSING IMPLEMENTATION FOR TESTING

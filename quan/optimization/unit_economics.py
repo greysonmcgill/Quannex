@@ -30,13 +30,9 @@ from decimal import Decimal, ROUND_HALF_UP
 from enum import Enum
 from typing import Dict, List, Optional, Any, Tuple
 from collections import defaultdict
-import logging
-import sys
+from quan.logging_config import get_logger
 
-sys.path.insert(0, '/home/user/Quan')
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # =============================================================================

@@ -20,13 +20,11 @@ from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Any, Tuple, Set
 import logging
-import sys
 import copy
 
-sys.path.insert(0, '/home/user/Quan')
+from quan.logging_config import get_logger
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # =============================================================================

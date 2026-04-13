@@ -23,12 +23,10 @@ Options:
 import asyncio
 import argparse
 import json
-import sys
 from datetime import datetime
 from dataclasses import asdict
 from decimal import Decimal
 
-sys.path.insert(0, '/home/user/Quan')
 
 from quan.backtest.lifecycle_orchestrator import (
     LifecycleOrchestrator,

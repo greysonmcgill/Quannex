@@ -19,8 +19,6 @@ import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 
-import sys
-sys.path.insert(0, '/home/user/Quan')
 
 
 # =============================================================================

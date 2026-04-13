@@ -44,14 +44,9 @@ from typing import (
     Union,
 )
 
-import sys
-sys.path.insert(0, '/home/user/Quan')
+from quan.logging_config import get_logger
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # =============================================================================

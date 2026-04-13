@@ -23,8 +23,6 @@ from enum import Enum
 import hashlib
 import statistics
 
-import sys
-sys.path.insert(0, '/home/user/Quan')
 
 
 # =============================================================================

@@ -23,17 +23,12 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Any, Tuple
-import logging
-import sys
-
-sys.path.insert(0, '/home/user/Quan')
-
+from quan.logging_config import get_logger
 from quan.simulation.sub_1k_simulation import (
     SUB_1K_UNIVERSE, MicroDebtType, MicroDebtProfile, Sub1KAccount
 )
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # =============================================================================
