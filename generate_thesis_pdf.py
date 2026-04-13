@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-QUAN Systemic Thesis PDF Generator
+Quannex Systemic Thesis PDF Generator
 
 Generates a professional PDF of the foundational thesis document:
 "Systemic Latency: The Structural Incompatibility of Legacy Collections
@@ -233,7 +233,7 @@ def build_cover_page(s):
     """Build the cover page."""
     elements = []
     elements.append(Spacer(1, 1.5 * inch))
-    elements.append(Paragraph("QUAN Recovery", s['title']))
+    elements.append(Paragraph("Quannex", s['title']))
     elements.append(Spacer(1, 0.3 * inch))
 
     # Main title
@@ -250,7 +250,7 @@ def build_cover_page(s):
 
     elements.append(Spacer(1, 0.2 * inch))
     elements.append(Paragraph(
-        "A Foundational Analysis for QUAN Recovery",
+        "A Foundational Analysis for Quannex",
         s['subtitle'],
     ))
 
@@ -259,8 +259,8 @@ def build_cover_page(s):
     # Metadata table
     meta = [
         ["Author:", "Greyson McGill, Founder & CEO"],
-        ["Organization:", "QUAN Recovery"],
-        ["Contact:", "greyson@quanrecovery.com"],
+        ["Organization:", "Quannex"],
+        ["Contact:", "greyson@quannex.com"],
         ["Version:", "3.0"],
         ["Date:", datetime.now().strftime('%B %Y')],
         ["Classification:", "Strategic Foundation Document"],
@@ -309,7 +309,7 @@ def build_table_of_contents(s):
         ("7.", "The Technological Remediation: Agentic AI and the Compute-Centric Model"),
         ("8.", "The Financial Remediation: Tokenization and DeFi Liquidity"),
         ("9.", "Competitive Landscape: Why Incumbents Cannot Close the Gap"),
-        ("10.", "QUAN Unit Economics: The Cost Advantage in Practice"),
+        ("10.", "Quannex Unit Economics: The Cost Advantage in Practice"),
         ("11.", "Conclusion: The Inevitable Transition"),
     ]
 
@@ -856,28 +856,28 @@ def build_section_8(s):
     elements.append(Paragraph("8.5 Regulatory Realism: The Path to Compliant Tokenization", s['h2']))
     elements.append(Paragraph(
         "Tokenized debt securities face real regulatory constraints that any credible implementation must address. "
-        "QUAN's approach is pragmatic, not utopian:",
+        "Quannex's approach is pragmatic, not utopian:",
         s['body'],
     ))
     for item in [
-        "<b>SEC Classification:</b> Tokenized debt tranches are securities under the Howey test. QUAN's model "
+        "<b>SEC Classification:</b> Tokenized debt tranches are securities under the Howey test. Quannex's model "
         "operates under Regulation D (506(c)) for accredited investors initially, with a Regulation A+ path "
         "for broader access as track record develops [46]",
         "<b>State Money Transmitter Licensing:</b> Smart contract payment flows trigger MTL requirements. "
-        "QUAN partners with licensed payment processors (Stripe, Dwolla) rather than building custodial infrastructure",
-        "<b>Bankruptcy Remoteness:</b> Assets must be legally isolated from the originator. QUAN uses "
+        "Quannex partners with licensed payment processors (Stripe, Dwolla) rather than building custodial infrastructure",
+        "<b>Bankruptcy Remoteness:</b> Assets must be legally isolated from the originator. Quannex uses "
         "Delaware statutory trusts (the same SPV structure used in traditional ABS) with on-chain record-keeping, "
         "not on-chain custody",
         "<b>CFPB Servicing Rules:</b> AI-driven servicing must still comply with FDCPA validation notices "
-        "and dispute resolution timelines. QUAN's compliance engine (Section 7.2) is the critical enabler--code "
+        "and dispute resolution timelines. Quannex's compliance engine (Section 7.2) is the critical enabler--code "
         "enforces what traditional servicers handle manually",
     ]:
         elements.append(Paragraph(f"- {item}", s['bullet']))
 
     elements.append(Spacer(1, 0.1 * inch))
     elements.append(Paragraph(
-        "The key insight: QUAN does not need to revolutionize securities law. The legal frameworks for "
-        "securitization already exist and are well-tested. What QUAN brings is the ability to make the "
+        "The key insight: Quannex does not need to revolutionize securities law. The legal frameworks for "
+        "securitization already exist and are well-tested. What Quannex brings is the ability to make the "
         "underlying assets--micro-debts that are currently written off--economically viable through AI-driven "
         "recovery, thereby creating a performant asset class where none existed before.",
         s['body'],
@@ -897,7 +897,7 @@ def build_section_9_competitive(s):
 
     elements.append(Paragraph(
         "Several companies are applying technology to debt collection. None are architected to solve "
-        "the micro-debt unit economics problem that defines QUAN's addressable market.",
+        "the micro-debt unit economics problem that defines Quannex's addressable market.",
         s['body'],
     ))
 
@@ -917,7 +917,7 @@ def build_section_9_competitive(s):
         s,
     ))
 
-    elements.append(Paragraph("9.2 Why QUAN Is Structurally Different", s['h2']))
+    elements.append(Paragraph("9.2 Why Quannex Is Structurally Different", s['h2']))
     elements.append(Paragraph(
         "The competitors above share a common limitation: they optimize within the existing collections "
         "architecture rather than replacing it. They make human agents more efficient, or automate a "
@@ -927,7 +927,7 @@ def build_section_9_competitive(s):
     ))
 
     elements.append(Spacer(1, 0.1 * inch))
-    elements.append(Paragraph("QUAN's moat is the integration of three layers that no competitor combines:", s['body']))
+    elements.append(Paragraph("Quannex's moat is the integration of three layers that no competitor combines:", s['body']))
     for item in [
         "<b>Layer 1 -- Autonomous Full-Lifecycle Recovery:</b> Not just contact optimization, but end-to-end "
         "account management from ingestion through settlement, with zero human labor below $1,000. "
@@ -939,14 +939,14 @@ def build_section_9_competitive(s):
         "feature space for debtor segmentation",
         "<b>Layer 3 -- Liquidity Infrastructure:</b> Tokenization of recovered and recovering portfolios "
         "into tradeable instruments, creating a secondary market for an asset class that currently has "
-        "zero liquidity. This is the true platform play--QUAN becomes the exchange, not just the servicer",
+        "zero liquidity. This is the true platform play--Quannex becomes the exchange, not just the servicer",
     ]:
         elements.append(Paragraph(f"- {item}", s['bullet']))
 
     elements.append(Spacer(1, 0.1 * inch))
     elements.append(Paragraph(
-        "The result: QUAN does not compete with TrueAccord for the same $5,000 credit card portfolio. "
-        "QUAN operates in the $37.4B dead zone that every other player has written off as unrecoverable.",
+        "The result: Quannex does not compete with TrueAccord for the same $5,000 credit card portfolio. "
+        "Quannex operates in the $37.4B dead zone that every other player has written off as unrecoverable.",
         s['body'],
     ))
 
@@ -955,23 +955,23 @@ def build_section_9_competitive(s):
 
 
 def build_section_10_unit_economics(s):
-    """Section 10: QUAN Unit Economics."""
+    """Section 10: Quannex Unit Economics."""
     elements = []
     elements.append(Paragraph(
-        "10. QUAN Unit Economics: The Cost Advantage in Practice", s['h1'],
+        "10. Quannex Unit Economics: The Cost Advantage in Practice", s['h1'],
     ))
     elements.append(divider())
 
     elements.append(Paragraph(
         "Section 3 demonstrated that legacy collections break even only above ~$250. "
-        "QUAN's architecture fundamentally reshapes this equation.",
+        "Quannex's architecture fundamentally reshapes this equation.",
         s['body'],
     ))
 
-    elements.append(Paragraph("10.1 QUAN's Cost-to-Collect Per Account", s['h2']))
+    elements.append(Paragraph("10.1 Quannex's Cost-to-Collect Per Account", s['h2']))
     elements.append(Paragraph(
         "Based on current API pricing for AI voice, SMS, and email channels, and our platform's "
-        "orchestration efficiency, QUAN's projected fully-loaded cost per account is:",
+        "orchestration efficiency, Quannex's projected fully-loaded cost per account is:",
         s['body'],
     ))
 
@@ -988,14 +988,14 @@ def build_section_10_unit_economics(s):
     ]
     elements.extend(make_table(
         cost_data, [1.8 * inch, 1.0 * inch, 2.6 * inch],
-        "Table 6: QUAN Projected Cost-to-Collect Per Account",
+        "Table 6: Quannex Projected Cost-to-Collect Per Account",
         s,
     ))
 
-    elements.append(Paragraph("10.2 Break-Even Comparison: Legacy vs. QUAN", s['h2']))
+    elements.append(Paragraph("10.2 Break-Even Comparison: Legacy vs. Quannex", s['h2']))
 
     be_data = [
-        ["Debt Balance", "Legacy Break-Even\nRecovery Rate", "QUAN Break-Even\nRecovery Rate", "QUAN Margin\nat 15% Recovery"],
+        ["Debt Balance", "Legacy Break-Even\nRecovery Rate", "Quannex Break-Even\nRecovery Rate", "Quannex Margin\nat 15% Recovery"],
         ["$500", "9.4%", "0.13%", "$74.00 (98.7%)"],
         ["$200", "23.5%", "0.33%", "$29.00 (96.7%)"],
         ["$100", "47.0%", "0.67%", "$14.00 (93.3%)"],
@@ -1004,13 +1004,13 @@ def build_section_10_unit_economics(s):
     ]
     elements.extend(make_table(
         be_data, [0.9 * inch, 1.4 * inch, 1.4 * inch, 1.6 * inch],
-        "Table 7: Break-Even Analysis -- Legacy Model vs. QUAN at $1.00/account CTC",
+        "Table 7: Break-Even Analysis -- Legacy Model vs. Quannex at $1.00/account CTC",
         s,
     ))
 
     elements.append(Spacer(1, 0.1 * inch))
     elements.append(Paragraph(
-        "At $1.00 per account, QUAN breaks even at a 1.33% recovery rate on a $50 debt--compared "
+        "At $1.00 per account, Quannex breaks even at a 1.33% recovery rate on a $50 debt--compared "
         "to the 94% required by legacy. Even conservative 15% recovery rates yield 87%+ gross margins "
         "on micro-debt, transforming a structurally impossible business into a high-margin one.",
         s['body'],
@@ -1018,7 +1018,7 @@ def build_section_10_unit_economics(s):
 
     elements.append(Paragraph("10.3 Portfolio-Level Projections", s['h2']))
     elements.append(Paragraph(
-        "Modeled against the $37.4B dead zone market (Section 3.5), assuming QUAN captures "
+        "Modeled against the $37.4B dead zone market (Section 3.5), assuming Quannex captures "
         "1% of addressable volume in Year 1 with a blended 12% recovery rate:",
         s['body'],
     ))
@@ -1035,13 +1035,13 @@ def build_section_10_unit_economics(s):
     ]
     elements.extend(make_table(
         portfolio_data, [1.8 * inch, 1.5 * inch, 1.5 * inch],
-        "Table 8: QUAN Portfolio-Level Financial Projections",
+        "Table 8: Quannex Portfolio-Level Financial Projections",
         s,
     ))
 
     elements.append(Paragraph("10.4 Early Validation", s['h2']))
     elements.append(Paragraph(
-        "QUAN's platform simulation environment has processed 1M+ synthetic accounts across "
+        "Quannex's platform simulation environment has processed 1M+ synthetic accounts across "
         "10 debt categories, validating the core architecture:",
         s['body'],
     ))
@@ -1104,9 +1104,9 @@ def build_section_11_conclusion(s):
         s['body'],
     ))
 
-    elements.append(Paragraph("The QUAN Solution", s['h2']))
+    elements.append(Paragraph("The Quannex Solution", s['h2']))
     elements.append(Paragraph(
-        "QUAN is not disrupting an existing market. QUAN is <b>creating the infrastructure for a "
+        "Quannex is not disrupting an existing market. Quannex is <b>creating the infrastructure for a "
         "market that currently does not function</b>.",
         s['body'],
     ))
@@ -1117,7 +1117,7 @@ def build_section_11_conclusion(s):
         s['body'],
     ))
     elements.append(Paragraph(
-        "<b>QUAN is the architecture that resurrects it.</b>",
+        "<b>Quannex is the architecture that resurrects it.</b>",
         s['body'],
     ))
 
@@ -1205,7 +1205,7 @@ def generate_thesis_pdf(output_dir: str = "./output") -> str:
     output_path.mkdir(exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    pdf_path = output_path / f"QUAN_Systemic_Thesis_{timestamp}.pdf"
+    pdf_path = output_path / f"Quannex_Systemic_Thesis_{timestamp}.pdf"
 
     doc = SimpleDocTemplate(
         str(pdf_path),
@@ -1243,7 +1243,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Generate QUAN Systemic Thesis PDF",
+        description="Generate Quannex Systemic Thesis PDF",
     )
     parser.add_argument(
         "--output", "-o", default="./output",
@@ -1253,7 +1253,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 60)
-    print("  QUAN SYSTEMIC THESIS PDF GENERATOR")
+    print("  Quannex SYSTEMIC THESIS PDF GENERATOR")
     print("=" * 60)
     print()
     print("Generating: Systemic Latency: The Structural Incompatibility")
