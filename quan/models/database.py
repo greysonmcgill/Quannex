@@ -255,7 +255,7 @@ class Account(Base):
     settlement_accepted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     # Extra data
-    metadata: Mapped[Optional[str]] = mapped_column(JSON, nullable=True)
+    extra_metadata: Mapped[Optional[str]] = mapped_column("metadata", JSON, nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
