@@ -1,17 +1,28 @@
-.PHONY: dev api frontend migrate seed
+.PHONY: dev api frontend migrate seed install status test lint
 
 dev:
-	./scripts/dev.sh
+	python3 -m quan.cli start
 
 api:
-	alembic upgrade head
-	uvicorn quan.main:app --reload --host 0.0.0.0 --port 8000
+	python3 -m quan.cli api
 
 frontend:
-	cd dashboard && npm run dev
+	python3 -m quan.cli dashboard
 
 migrate:
-	alembic upgrade head
+	python3 -m quan.cli db migrate
 
 seed:
-	python3 scripts/seed_data.py --reset
+	python3 -m quan.cli db seed --reset
+
+install:
+	python3 -m quan.cli install
+
+status:
+	python3 -m quan.cli status
+
+test:
+	python3 -m quan.cli test --coverage
+
+lint:
+	python3 -m quan.cli lint
