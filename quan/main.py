@@ -6,6 +6,8 @@ from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from pydantic import BaseModel, Field
+
 from quan.config import settings
 from quan.logging_config import configure_logging, get_logger
 from quan.ingestion import ingestion_router
@@ -252,6 +254,119 @@ async def process_payment(request: Request):
         "success": result.success,
         "transaction_id": result.transaction_id,
         "error": result.error,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Hierarchical Agent System — /api/v1/agent/*
+# ---------------------------------------------------------------------------
+
+
+class AgentStepRequest(BaseModel):
+    """Request body for a single supervisor step."""
+
+    account: dict = Field(
+        ..., description="Account data dict (must include account_id)."
+    )
+    goal: str = Field(
+        default="maximize recovery while maintaining compliance",
+        description="Natural-language goal for this step.",
+    )
+    session_id: str | None = Field(
+        default=None,
+        description="Optional session ID to resume an existing agent session.",
+    )
+
+
+class AgentStepResponse(BaseModel):
+    """Response from one supervisor step."""
+
+    session_id: str
+    step: int
+    action: str
+    reasoning: str
+    payload: dict
+    next_steps: list[str]
+    token_estimate: int
+    budget_pct: float
+
+
+@app.post("/api/v1/agent/step", response_model=AgentStepResponse)
+async def agent_step(req: AgentStepRequest):
+    """
+    Execute one reasoning step of the hierarchical agent system.
+
+    The supervisor will:
+    1. Run ML scoring (CollectionIntelligence) as a fast reflex.
+    2. Build context from memory.
+    3. Call the LLM for a routing decision.
+    4. Delegate to the appropriate specialist.
+    5. Return structured JSON with the result.
+
+    Call this endpoint repeatedly to advance through the collection
+    workflow for a single account.
+    """
+    from quan.agents.memory import QuannexMemoryManager
+    from quan.agents.llm_wrapper import LLMWrapper
+    from quan.agents.supervisor import QuannexSupervisor
+    from quan.agents.outreach_specialist import OutreachSpecialist
+
+    # Resolve persistence path (one file per session)
+    session_id = req.session_id or ""
+    persist_name = f"quan_agent_memory_{session_id}.json" if session_id else "quan_agent_memory.json"
+
+    memory = QuannexMemoryManager(persist_path=persist_name)
+
+    # Try to restore a previous session
+    if session_id:
+        memory.load()
+        if memory.state.session_id and memory.state.session_id != session_id:
+            # Mismatch — start fresh
+            memory = QuannexMemoryManager(persist_path=persist_name)
+
+    llm = LLMWrapper()
+    supervisor = QuannexSupervisor(llm=llm, memory=memory)
+
+    # Register the outreach specialist
+    supervisor.register_specialist("outreach", OutreachSpecialist())
+
+    # Execute one step
+    result = await supervisor.step(account=req.account, goal=req.goal)
+
+    return AgentStepResponse(
+        session_id=memory.state.session_id,
+        step=memory.state.step_count,
+        action=result.action,
+        reasoning=result.reasoning,
+        payload=result.payload,
+        next_steps=result.next_steps,
+        token_estimate=result.token_estimate,
+        budget_pct=round(memory.budget_pct(), 4),
+    )
+
+
+@app.get("/api/v1/agent/state/{session_id}")
+async def agent_state(session_id: str):
+    """Retrieve the current agent state for a session (debug / audit)."""
+    from quan.agents.memory import QuannexMemoryManager
+
+    memory = QuannexMemoryManager(
+        persist_path=f"quan_agent_memory_{session_id}.json"
+    )
+    if not memory.load():
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return {
+        "session_id": memory.state.session_id,
+        "account_id": memory.state.account_id,
+        "step_count": memory.state.step_count,
+        "summary": memory.state.summary,
+        "ml_cache": memory.state.ml_cache.model_dump(),
+        "observations": [o.model_dump() for o in memory.state.observations],
+        "compliance_notes": [c.model_dump() for c in memory.state.compliance_notes],
+        "current_plan": memory.state.current_plan,
+        "budget_pct": round(memory.budget_pct(), 4),
+        "total_tokens_used": memory.state.total_tokens_used,
     }
 
 
