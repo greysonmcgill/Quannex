@@ -87,6 +87,9 @@ dmypy.json
 *.db
 *.sqlite3
 
+# Generated output
+output/
+
 # Secrets (NEVER commit these)
 credentials.json
 *.pem
