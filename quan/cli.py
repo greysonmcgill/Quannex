@@ -221,32 +221,219 @@ def cmd_api(args: argparse.Namespace) -> int:
     return _run(cmd, check=False).returncode
 
 
+def _check_node_runtime() -> tuple[bool, str]:
+    """Return (available, version) for Node.js."""
+    try:
+        result = subprocess.run(
+            ["node", "--version"], capture_output=True, text=True, timeout=5,
+        )
+        if result.returncode == 0:
+            return True, result.stdout.strip()
+    except Exception:
+        pass
+    return False, ""
+
+
+def _check_npm_runtime() -> tuple[bool, str]:
+    """Return (available, version) for npm."""
+    try:
+        result = subprocess.run(
+            ["npm", "--version"], capture_output=True, text=True, timeout=5,
+        )
+        if result.returncode == 0:
+            return True, result.stdout.strip()
+    except Exception:
+        pass
+    return False, ""
+
+
+def _check_api_reachable(port: int) -> bool:
+    """Return True if the API health endpoint responds."""
+    try:
+        import urllib.request
+        urllib.request.urlopen(f"http://localhost:{port}/health", timeout=2)
+        return True
+    except Exception:
+        return False
+
+
+DASHBOARD_PAGES = [
+    ("/",              "Overview",      "KPIs, funnel, alerts, channel performance"),
+    ("/executive",     "Executive",     "Revenue trends, gross margin, ROI"),
+    ("/operations",    "Operations",    "Pipeline stages, throughput, bottlenecks"),
+    ("/compliance",    "Compliance",    "FDCPA/TCPA scores, violations, audit readiness"),
+    ("/tokenization",  "Tokenization",  "Pools, tranches, investor metrics"),
+    ("/upload",        "Upload",        "CSV portfolio uploader with validation"),
+    ("/accounts",      "Accounts",      "Filterable account list with detail views"),
+    ("/health",        "System Health", "Module status, uptime, incidents"),
+    ("/alerts",        "Alerts",        "Active alerts and recommendations"),
+]
+
+
 def cmd_dashboard(args: argparse.Namespace) -> int:
-    """Start the Next.js dashboard only."""
-    _print_header("QUAN Recovery — Dashboard")
+    """Start the Next.js dashboard frontend."""
+    _print_header("QUAN Recovery — Dashboard Frontend")
 
     dashboard_dir = ROOT_DIR / "dashboard"
     if not dashboard_dir.is_dir():
         _error(f"Dashboard directory not found: {dashboard_dir}")
         return 1
 
+    # ---- Pre-flight checks ----
+    _step("Running pre-flight checks...")
+
+    node_ok, node_ver = _check_node_runtime()
+    npm_ok, npm_ver = _check_npm_runtime()
+
+    if not node_ok:
+        _error("Node.js is not installed. Install Node.js 18+ to continue.")
+        return 1
+    _info(f"Node.js:       {node_ver}")
+
+    if not npm_ok:
+        _error("npm is not installed.")
+        return 1
+    _info(f"npm:           v{npm_ver}")
+
+    # ---- Install dependencies if needed ----
     if not _check_node(dashboard_dir):
-        _warn("node_modules not found. Installing...")
-        _run(["npm", "install"], cwd=dashboard_dir)
+        _warn("node_modules not found. Installing dependencies...")
+        ret = _run(["npm", "install"], cwd=dashboard_dir, check=False)
+        if ret.returncode != 0:
+            _error("npm install failed")
+            return 1
+        _info("Dependencies installed")
+    else:
+        _info("Dependencies:  installed")
 
     port = args.port
-    _info(f"Starting dashboard on http://localhost:{port}")
-    print()
+    api_port = args.api_port
 
+    # ---- Optionally start the backend API ----
+    api_proc = None
+    procs: list[subprocess.Popen] = []
+
+    if args.with_api:
+        _ensure_env()
+        api_running = _check_api_reachable(api_port)
+        if api_running:
+            _info(f"API server:    already running on port {api_port}")
+        else:
+            _step(f"Starting API backend on port {api_port}...")
+
+            # Run migrations first
+            _run(
+                [sys.executable, "-m", "alembic", "upgrade", "head"],
+                check=False,
+            )
+
+            api_env = os.environ.copy()
+            api_env.setdefault("ENVIRONMENT", "development")
+            api_env.setdefault("DEBUG", "true")
+            api_cmd = [
+                sys.executable, "-m", "uvicorn", "quan.main:app",
+                "--reload", "--host", "0.0.0.0", "--port", str(api_port),
+            ]
+            api_proc = subprocess.Popen(
+                api_cmd, cwd=ROOT_DIR, env=api_env,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+            procs.append(api_proc)
+
+            # Give the API a moment to boot
+            for _ in range(10):
+                time.sleep(0.5)
+                if _check_api_reachable(api_port):
+                    break
+            if _check_api_reachable(api_port):
+                _info(f"API server:    {C.GREEN}started{C.RESET} on port {api_port}")
+            else:
+                _warn(f"API server:    started on port {api_port} (may still be booting)")
+    else:
+        api_running = _check_api_reachable(api_port)
+        if api_running:
+            _info(f"API server:    {C.GREEN}connected{C.RESET} on port {api_port}")
+        else:
+            _warn(f"API server:    not detected on port {api_port}")
+            _warn("Dashboard will show empty-state data. Use --with-api to auto-start it.")
+
+    # ---- Handle lint-only mode early ----
+    if args.lint_only:
+        print()
+        _step("Running Next.js lint...")
+        ret = _run(["npm", "run", "lint"], cwd=dashboard_dir, check=False)
+        for p in procs:
+            p.terminate()
+        if ret.returncode == 0:
+            _info("Lint: clean")
+        else:
+            _warn("Lint found issues")
+        return ret.returncode
+
+    # ---- Build environment ----
     env = os.environ.copy()
     env["PORT"] = str(port)
+    env["NEXT_PUBLIC_API_URL"] = f"http://localhost:{api_port}"
+    env.setdefault("API_URL", f"http://localhost:{api_port}")
+
+    # ---- Print startup summary ----
+    mode = "production" if args.build else "development"
+    print()
+    print(f"  {C.BOLD}Mode:{C.RESET}   {mode}")
+    print(f"  {C.BOLD}URL:{C.RESET}    {C.CYAN}http://localhost:{port}{C.RESET}")
+    print(f"  {C.BOLD}API:{C.RESET}    http://localhost:{api_port}")
+    print()
+
+    print(f"  {C.BOLD}Pages:{C.RESET}")
+    for path, name, desc in DASHBOARD_PAGES:
+        url = f"http://localhost:{port}{path}"
+        print(f"    {C.DIM}{name:<16}{C.RESET} {url}")
+    print()
+
+    # ---- Start the dashboard ----
+    def _shutdown(signum=None, frame=None):
+        _step("Shutting down...")
+        for p in procs:
+            try:
+                p.terminate()
+                p.wait(timeout=5)
+            except Exception:
+                p.kill()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, _shutdown)
+    signal.signal(signal.SIGTERM, _shutdown)
 
     if args.build:
         _step("Building production bundle...")
-        _run(["npm", "run", "build"], cwd=dashboard_dir)
-        return _run(["npm", "run", "start"], cwd=dashboard_dir, check=False).returncode
+        ret = _run(["npm", "run", "build"], cwd=dashboard_dir, check=False)
+        if ret.returncode != 0:
+            _error("Build failed")
+            _shutdown()
+            return 1
+        _info("Build complete. Starting production server...")
+        print()
+        dash_proc = subprocess.Popen(
+            ["npm", "run", "start"], cwd=dashboard_dir, env=env,
+        )
     else:
-        return _run(["npm", "run", "dev"], cwd=dashboard_dir, check=False).returncode
+        dash_proc = subprocess.Popen(
+            ["npm", "run", "dev"], cwd=dashboard_dir, env=env,
+        )
+
+    procs.append(dash_proc)
+
+    _info("Dashboard running. Press Ctrl+C to stop.")
+    print()
+
+    # Wait for processes
+    while True:
+        for p in procs:
+            ret = p.poll()
+            if ret is not None and p is dash_proc:
+                _warn(f"Dashboard exited with code {ret}")
+                _shutdown()
+        time.sleep(1)
 
 
 def cmd_db(args: argparse.Namespace) -> int:
@@ -496,9 +683,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_api.add_argument("--workers", "-w", type=int, default=1, help="Number of workers (default: 1)")
 
     # --- dashboard ---
-    p_dash = sub.add_parser("dashboard", help="Start the Next.js dashboard")
-    p_dash.add_argument("--port", "-p", type=int, default=3000, help="Port (default: 3000)")
-    p_dash.add_argument("--build", action="store_true", help="Build and serve production bundle")
+    p_dash = sub.add_parser(
+        "dashboard",
+        help="Start the Next.js dashboard frontend",
+        description="Start the QUAN Recovery dashboard. Runs pre-flight checks, "
+        "optionally boots the API backend, and launches Next.js.",
+    )
+    p_dash.add_argument("--port", "-p", type=int, default=3000, help="Dashboard port (default: 3000)")
+    p_dash.add_argument("--api-port", type=int, default=8000, help="Backend API port (default: 8000)")
+    p_dash.add_argument("--with-api", action="store_true", help="Auto-start the backend API server alongside the dashboard")
+    p_dash.add_argument("--build", action="store_true", help="Build and serve a production bundle instead of dev mode")
+    p_dash.add_argument("--lint-only", action="store_true", help="Run Next.js lint only (no server)")
 
     # --- db ---
     p_db = sub.add_parser("db", help="Database management")
