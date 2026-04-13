@@ -3,14 +3,19 @@ Dashboard API Router
 
 Exposes dashboard data via REST endpoints for the frontend UI.
 Supports WebSocket connections for real-time updates.
+
+Uses database-backed DashboardService for real data.
+Falls back to in-memory QUANDashboard if database unavailable.
 """
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
 from fastapi.responses import JSONResponse
 from datetime import datetime, timedelta
 from typing import Optional
 import asyncio
 import json
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from quan.analytics.dashboard import (
     QUANDashboard,
@@ -18,15 +23,17 @@ from quan.analytics.dashboard import (
     TimeGranularity,
     MetricType,
 )
+from quan.database import get_db
+from quan.api.dashboard_service import DashboardService
 
 router = APIRouter(prefix="/api/v1/dashboard", tags=["Dashboard"])
 
-# Global dashboard instance
+# Global in-memory dashboard instance (fallback)
 _dashboard: Optional[QUANDashboard] = None
 
 
-def get_dashboard() -> QUANDashboard:
-    """Get or create dashboard instance"""
+def get_in_memory_dashboard() -> QUANDashboard:
+    """Get or create in-memory dashboard instance (fallback)"""
     global _dashboard
     if _dashboard is None:
         _dashboard = QUANDashboard()
@@ -60,44 +67,73 @@ manager = ConnectionManager()
 
 
 @router.get("/")
-async def get_full_dashboard():
+async def get_full_dashboard(db: AsyncSession = Depends(get_db)):
     """Get complete dashboard with all sections"""
-    dashboard = get_dashboard()
-    return dashboard.get_full_dashboard()
+    try:
+        service = DashboardService(db)
+        return await service.get_full_dashboard()
+    except Exception:
+        # Fallback to in-memory
+        dashboard = get_in_memory_dashboard()
+        return dashboard.get_full_dashboard()
 
 
 @router.get("/executive")
-async def get_executive_dashboard():
+async def get_executive_dashboard(db: AsyncSession = Depends(get_db)):
     """Get executive dashboard snapshot"""
-    dashboard = get_dashboard()
-    return dashboard.executive.get_snapshot()
+    try:
+        service = DashboardService(db)
+        return await service.get_executive_snapshot()
+    except Exception:
+        dashboard = get_in_memory_dashboard()
+        return dashboard.executive.get_snapshot()
 
 
 @router.get("/operations")
-async def get_operations_dashboard():
+async def get_operations_dashboard(db: AsyncSession = Depends(get_db)):
     """Get operations dashboard snapshot"""
-    dashboard = get_dashboard()
-    return dashboard.operations.get_snapshot()
+    try:
+        service = DashboardService(db)
+        return await service.get_operations_snapshot()
+    except Exception:
+        dashboard = get_in_memory_dashboard()
+        return dashboard.operations.get_snapshot()
 
 
 @router.get("/compliance")
-async def get_compliance_dashboard():
+async def get_compliance_dashboard(db: AsyncSession = Depends(get_db)):
     """Get compliance dashboard snapshot"""
-    dashboard = get_dashboard()
-    return dashboard.compliance.get_snapshot()
+    try:
+        service = DashboardService(db)
+        return await service.get_compliance_snapshot()
+    except Exception:
+        dashboard = get_in_memory_dashboard()
+        return dashboard.compliance.get_snapshot()
 
 
 @router.get("/tokenization")
-async def get_tokenization_dashboard():
+async def get_tokenization_dashboard(db: AsyncSession = Depends(get_db)):
     """Get tokenization dashboard snapshot"""
-    dashboard = get_dashboard()
-    return dashboard.tokenization.get_snapshot()
+    try:
+        service = DashboardService(db)
+        return await service.get_tokenization_snapshot()
+    except Exception:
+        dashboard = get_in_memory_dashboard()
+        return dashboard.tokenization.get_snapshot()
 
 
 @router.get("/health")
-async def get_system_health():
+async def get_system_health(db: AsyncSession = Depends(get_db)):
     """Get system health status"""
-    dashboard = get_dashboard()
+    try:
+        service = DashboardService(db)
+        full = await service.get_full_dashboard()
+        return {
+            "system_health": full["system_health"],
+            "alerts": full["alerts"],
+        }
+    except Exception:
+        dashboard = get_in_memory_dashboard()
     full = dashboard.get_full_dashboard()
     return {
         "system_health": full["system_health"],
@@ -112,7 +148,7 @@ async def get_metric(
     operation: str = Query("avg", enum=["avg", "sum", "min", "max", "count"]),
 ):
     """Get time series data for a specific metric"""
-    dashboard = get_dashboard()
+    dashboard = get_in_memory_dashboard()
     granularity_map = {
         "minute": TimeGranularity.MINUTE,
         "hour": TimeGranularity.HOUR,
@@ -138,77 +174,129 @@ async def get_metric(
 
 
 @router.get("/alerts")
-async def get_alerts():
+async def get_alerts(db: AsyncSession = Depends(get_db)):
     """Get all active alerts"""
-    dashboard = get_dashboard()
-    full = dashboard.get_full_dashboard()
-    return {"alerts": full["alerts"], "generated_at": datetime.now().isoformat()}
+    try:
+        service = DashboardService(db)
+        full = await service.get_full_dashboard()
+        return {"alerts": full["alerts"], "generated_at": datetime.now().isoformat()}
+    except Exception:
+        dashboard = get_in_memory_dashboard()
+        full = dashboard.get_full_dashboard()
+        return {"alerts": full["alerts"], "generated_at": datetime.now().isoformat()}
 
 
 @router.get("/pipeline")
-async def get_pipeline_status():
+async def get_pipeline_status(db: AsyncSession = Depends(get_db)):
     """Get detailed pipeline stage breakdown"""
-    dashboard = get_dashboard()
-    ops = dashboard.operations.get_snapshot()
-    return {
-        "pipeline": ops["pipeline"],
-        "bottlenecks": ops["bottlenecks"],
-        "throughput": ops["throughput"],
-    }
+    try:
+        service = DashboardService(db)
+        ops = await service.get_operations_snapshot()
+        return {
+            "pipeline": ops["pipeline"],
+            "bottlenecks": ops["bottlenecks"],
+            "throughput": ops["throughput"],
+        }
+    except Exception:
+        dashboard = get_in_memory_dashboard()
+        ops = dashboard.operations.get_snapshot()
+        return {
+            "pipeline": ops["pipeline"],
+            "bottlenecks": ops["bottlenecks"],
+            "throughput": ops["throughput"],
+        }
 
 
 @router.get("/channels")
-async def get_channel_performance():
+async def get_channel_performance(db: AsyncSession = Depends(get_db)):
     """Get channel performance metrics"""
-    dashboard = get_dashboard()
-    ops = dashboard.operations.get_snapshot()
-    return {"channels": ops["channels"], "generated_at": datetime.now().isoformat()}
+    try:
+        service = DashboardService(db)
+        ops = await service.get_operations_snapshot()
+        return {"channels": ops["channels"], "generated_at": datetime.now().isoformat()}
+    except Exception:
+        dashboard = get_in_memory_dashboard()
+        ops = dashboard.operations.get_snapshot()
+        return {"channels": ops["channels"], "generated_at": datetime.now().isoformat()}
 
 
 @router.get("/queues")
-async def get_queue_status():
+async def get_queue_status(db: AsyncSession = Depends(get_db)):
     """Get queue depths and processing rates"""
-    dashboard = get_dashboard()
-    ops = dashboard.operations.get_snapshot()
-    return {"queues": ops["queues"], "generated_at": datetime.now().isoformat()}
+    try:
+        service = DashboardService(db)
+        ops = await service.get_operations_snapshot()
+        return {"queues": ops["queues"], "generated_at": datetime.now().isoformat()}
+    except Exception:
+        dashboard = get_in_memory_dashboard()
+        ops = dashboard.operations.get_snapshot()
+        return {"queues": ops["queues"], "generated_at": datetime.now().isoformat()}
 
 
 @router.get("/violations")
 async def get_violations(
     days: int = Query(30, ge=1, le=365),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get compliance violations"""
-    dashboard = get_dashboard()
-    compliance = dashboard.compliance.get_snapshot()
-    return {
-        "violations": compliance["violations"],
-        "regulation_status": compliance["regulation_status"],
-        "generated_at": datetime.now().isoformat(),
-    }
+    try:
+        service = DashboardService(db)
+        compliance = await service.get_compliance_snapshot()
+        return {
+            "violations": compliance["violations"],
+            "regulation_status": compliance["regulation_status"],
+            "generated_at": datetime.now().isoformat(),
+        }
+    except Exception:
+        dashboard = get_in_memory_dashboard()
+        compliance = dashboard.compliance.get_snapshot()
+        return {
+            "violations": compliance["violations"],
+            "regulation_status": compliance["regulation_status"],
+            "generated_at": datetime.now().isoformat(),
+        }
 
 
 @router.get("/pools")
-async def get_pool_performance():
+async def get_pool_performance(db: AsyncSession = Depends(get_db)):
     """Get tokenization pool performance"""
-    dashboard = get_dashboard()
-    tokenization = dashboard.tokenization.get_snapshot()
-    return {
-        "pools": tokenization["pools"],
-        "portfolio_summary": tokenization["portfolio_summary"],
-        "generated_at": datetime.now().isoformat(),
-    }
+    try:
+        service = DashboardService(db)
+        tokenization = await service.get_tokenization_snapshot()
+        return {
+            "pools": tokenization["pools"],
+            "portfolio_summary": tokenization["portfolio_summary"],
+            "generated_at": datetime.now().isoformat(),
+        }
+    except Exception:
+        dashboard = get_in_memory_dashboard()
+        tokenization = dashboard.tokenization.get_snapshot()
+        return {
+            "pools": tokenization["pools"],
+            "portfolio_summary": tokenization["portfolio_summary"],
+            "generated_at": datetime.now().isoformat(),
+        }
 
 
 @router.get("/investors")
-async def get_investor_metrics():
+async def get_investor_metrics(db: AsyncSession = Depends(get_db)):
     """Get investor metrics and secondary market data"""
-    dashboard = get_dashboard()
-    tokenization = dashboard.tokenization.get_snapshot()
-    return {
-        "investor_metrics": tokenization["investor_metrics"],
-        "secondary_market": tokenization["secondary_market"],
-        "generated_at": datetime.now().isoformat(),
-    }
+    try:
+        service = DashboardService(db)
+        tokenization = await service.get_tokenization_snapshot()
+        return {
+            "investor_metrics": tokenization["investor_metrics"],
+            "secondary_market": tokenization["secondary_market"],
+            "generated_at": datetime.now().isoformat(),
+        }
+    except Exception:
+        dashboard = get_in_memory_dashboard()
+        tokenization = dashboard.tokenization.get_snapshot()
+        return {
+            "investor_metrics": tokenization["investor_metrics"],
+            "secondary_market": tokenization["secondary_market"],
+            "generated_at": datetime.now().isoformat(),
+        }
 
 
 @router.post("/metrics/{metric_name}")
@@ -219,7 +307,7 @@ async def record_metric(
     metric_type: str = "gauge",
 ):
     """Record a new metric value"""
-    dashboard = get_dashboard()
+    dashboard = get_in_memory_dashboard()
 
     type_map = {
         "counter": MetricType.COUNTER,
@@ -259,7 +347,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         # Send initial dashboard data
-        dashboard = get_dashboard()
+        dashboard = get_in_memory_dashboard()
         await websocket.send_json(
             {"type": "initial", "data": dashboard.get_full_dashboard()}
         )
@@ -280,7 +368,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
             except asyncio.TimeoutError:
                 # Send heartbeat/update
-                dashboard = get_dashboard()
+                dashboard = get_in_memory_dashboard()
                 await websocket.send_json(
                     {
                         "type": "update",
@@ -302,15 +390,19 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @router.get("/summary")
-async def get_summary_stats():
+async def get_summary_stats(db: AsyncSession = Depends(get_db)):
     """Get summary statistics for dashboard cards"""
-    dashboard = get_dashboard()
-    full = dashboard.get_full_dashboard()
+    try:
+        service = DashboardService(db)
+        return await service.get_summary_stats()
+    except Exception:
+        dashboard = get_in_memory_dashboard()
+        full = dashboard.get_full_dashboard()
 
-    exec_data = full["executive"]
-    ops_data = full["operations"]
-    compliance_data = full["compliance"]
-    token_data = full["tokenization"]
+        exec_data = full["executive"]
+        ops_data = full["operations"]
+        compliance_data = full["compliance"]
+        token_data = full["tokenization"]
 
     return {
         "generated_at": datetime.now().isoformat(),

@@ -9,8 +9,9 @@ from pathlib import Path
 from quan.config import settings
 from quan.logging_config import configure_logging, get_logger
 from quan.ingestion import ingestion_router
-from quan.api import dashboard_router
+from quan.api import dashboard_router, accounts_router, portfolios_router
 from quan.monitoring import get_metrics
+from quan.database import init_db, close_db, check_db_connection
 
 # Configure logging at module load
 configure_logging()
@@ -23,6 +24,13 @@ async def lifespan(app: FastAPI):
 
     # Startup
     logger.info(f"Starting QUAN Recovery API - {settings.environment}")
+
+    # Initialize database
+    try:
+        await init_db()
+        logger.info("Database initialized")
+    except Exception as e:
+        logger.warning(f"Database initialization: {e}")
 
     # Initialize metrics
     metrics = get_metrics()
@@ -41,6 +49,9 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("Shutting down QUAN Recovery API")
+
+    # Close database connections
+    await close_db()
 
     if hasattr(app.state, "kafka_producer"):
         await app.state.kafka_producer.disconnect()
@@ -77,6 +88,8 @@ async def log_requests(request: Request, call_next):
 # Include routers
 app.include_router(ingestion_router, prefix="/api/v1")
 app.include_router(dashboard_router)
+app.include_router(accounts_router)
+app.include_router(portfolios_router)
 
 
 @app.get("/")
@@ -99,8 +112,10 @@ async def health():
 async def ready():
     """Readiness check endpoint"""
     # Check dependencies
+    db_ok = await check_db_connection()
+
     checks = {
-        "database": True,  # Would check actual connection
+        "database": db_ok,
         "kafka": True,  # Would check Kafka connection
         "redis": True,  # Would check Redis connection
     }
