@@ -134,7 +134,7 @@ def get_account_detail(account_id: str, db: Session = Depends(get_db)) -> dict[s
     account = (
         db.query(Account)
         .options(
-            joinedload(Account.contact_attempts),
+            joinedload(Account.contact_history),
             joinedload(Account.payments),
             joinedload(Account.compliance_events),
         )
@@ -148,16 +148,16 @@ def get_account_detail(account_id: str, db: Session = Depends(get_db)) -> dict[s
         **_account_summary(account),
         "contact_history": [
             {
-                "attempt_id": attempt.attempt_id,
+                "attempt_id": attempt.id,
                 "channel": attempt.channel,
                 "outcome": attempt.outcome,
-                "compliant": attempt.compliant,
+                "compliant": attempt.consent_verified,
                 "cost": float(attempt.cost),
-                "agent_name": attempt.agent_name,
-                "notes": attempt.notes,
-                "attempted_at": _iso(attempt.attempted_at),
+                "agent_name": attempt.agent_id,
+                "notes": attempt.message_content,
+                "attempted_at": _iso(attempt.created_at),
             }
-            for attempt in account.contact_attempts
+            for attempt in account.contact_history
         ],
         "payments": [
             {

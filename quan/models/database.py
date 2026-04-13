@@ -245,7 +245,7 @@ class Account(Base):
 
     # Collection metrics
     total_payments: Mapped[float] = mapped_column(Numeric(12, 2), default=0)
-    contact_attempts: Mapped[int] = mapped_column(Integer, default=0)
+    contact_attempts_count: Mapped[int] = mapped_column("contact_attempts", Integer, default=0)
     successful_contacts: Mapped[int] = mapped_column(Integer, default=0)
     last_contact_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     last_contact_channel: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
@@ -263,7 +263,7 @@ class Account(Base):
 
     # Relationships
     portfolio: Mapped[Optional["Portfolio"]] = relationship("Portfolio", back_populates="accounts")
-    contact_attempts: Mapped[List["ContactAttempt"]] = relationship("ContactAttempt", back_populates="account", order_by="desc(ContactAttempt.created_at)")
+    contact_history: Mapped[List["ContactAttempt"]] = relationship("ContactAttempt", back_populates="account", order_by="desc(ContactAttempt.created_at)")
     payments: Mapped[List["Payment"]] = relationship("Payment", back_populates="account", order_by="desc(Payment.created_at)")
     compliance_events: Mapped[List["ComplianceEvent"]] = relationship("ComplianceEvent", back_populates="account", order_by="desc(ComplianceEvent.created_at)")
 
@@ -362,7 +362,7 @@ class ContactAttempt(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
 
     # Relationships
-    account: Mapped["Account"] = relationship("Account", back_populates="contact_attempts")
+    account: Mapped["Account"] = relationship("Account", back_populates="contact_history")
 
     __table_args__ = (
         Index("ix_contact_attempts_account_id", "account_id"),
