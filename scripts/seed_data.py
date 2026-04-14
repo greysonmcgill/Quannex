@@ -38,7 +38,7 @@ STATUS_WEIGHTS = [
     ("contacted", 0.25),
     ("negotiating", 0.15),
     ("payment_pending", 0.15),
-    ("paid_in_full", 0.10),
+    ("resolved", 0.10),
 ]
 CHANNELS = ["sms", "email", "voice", "digital", "mail"]
 CHANNEL_COSTS = {
@@ -132,7 +132,7 @@ def main() -> None:
                 )
 
                 total_paid = Decimal("0.00")
-                if status == "paid_in_full":
+                if status == "resolved":
                     total_paid = original_balance
                 elif status == "payment_pending":
                     total_paid = (original_balance * Decimal(str(random.uniform(0.15, 0.65)))).quantize(Decimal("0.01"))
@@ -206,7 +206,7 @@ def main() -> None:
                         )
 
                 if total_paid > 0:
-                    payment_count = 1 if status in {"payment_pending", "paid_in_full"} else random.randint(0, 1)
+                    payment_count = 1 if status in {"payment_pending", "resolved"} else random.randint(0, 1)
                     for payment_index in range(payment_count):
                         amount = (
                             total_paid if payment_count == 1 else (total_paid / payment_count).quantize(Decimal("0.01"))
