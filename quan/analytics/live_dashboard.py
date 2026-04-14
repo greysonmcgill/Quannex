@@ -68,15 +68,15 @@ def build_executive_snapshot(db: Session) -> dict[str, Any]:
         db,
         select(func.coalesce(func.sum(Payment.amount), 0)).where(
             Payment.status == "completed",
-            Payment.recorded_at >= previous_start,
-            Payment.recorded_at < start,
+            Payment.created_at >= previous_start,
+            Payment.created_at < start,
         ),
     )
     previous_costs = _decimal_scalar(
         db,
         select(func.coalesce(func.sum(ContactAttempt.cost), 0)).where(
-            ContactAttempt.attempted_at >= previous_start,
-            ContactAttempt.attempted_at < start,
+            ContactAttempt.created_at >= previous_start,
+            ContactAttempt.created_at < start,
         ),
     )
 
@@ -106,8 +106,8 @@ def build_executive_snapshot(db: Session) -> dict[str, Any]:
             ),
         },
         "trends": {
-            "revenue": _daily_series(db, Payment.recorded_at, Payment.amount, Payment.status == "completed"),
-            "collections": _daily_series(db, Payment.recorded_at, Payment.amount, Payment.status == "completed"),
+            "revenue": _daily_series(db, Payment.created_at, Payment.amount, Payment.status == "completed"),
+            "collections": _daily_series(db, Payment.created_at, Payment.amount, Payment.status == "completed"),
             "recovery_rate": _daily_recovery_rate_series(db),
         },
         "alerts": _build_executive_alerts(recovery_rate, roi, cost_per_dollar),
@@ -123,14 +123,14 @@ def build_operations_snapshot(db: Session) -> dict[str, Any]:
     bottlenecks = _build_bottlenecks(queues, channels)
 
     recent_accounts = _count_since(db, Account.created_at, timedelta(hours=24))
-    recent_contacts = _count_since(db, ContactAttempt.attempted_at, timedelta(hours=24))
+    recent_contacts = _count_since(db, ContactAttempt.created_at, timedelta(hours=24))
     recent_resolutions = db.scalar(
         select(func.count()).select_from(Account).where(
             Account.status == "resolved",
             Account.updated_at >= _now() - timedelta(hours=24),
         )
     ) or 0
-    recent_payments = _count_since(db, Payment.recorded_at, timedelta(hours=24))
+    recent_payments = _count_since(db, Payment.created_at, timedelta(hours=24))
     active_accounts = db.scalar(select(func.count()).select_from(Account)) or 0
     active_contact_queue = sum(
         pipeline[stage]["count"] for stage in ["scored", "contacted", "negotiating"]
@@ -161,14 +161,14 @@ def build_compliance_snapshot(db: Session) -> dict[str, Any]:
     ninety_days = now - timedelta(days=90)
 
     events_30 = db.scalars(
-        select(ComplianceEvent).where(ComplianceEvent.occurred_at >= thirty_days)
+        select(ComplianceEvent).where(ComplianceEvent.created_at >= thirty_days)
     ).all()
     events_90 = db.scalars(
-        select(ComplianceEvent).where(ComplianceEvent.occurred_at >= ninety_days)
+        select(ComplianceEvent).where(ComplianceEvent.created_at >= ninety_days)
     ).all()
     all_contacts = db.scalar(select(func.count()).select_from(ContactAttempt)) or 0
     compliant_contacts = db.scalar(
-        select(func.count()).select_from(ContactAttempt).where(ContactAttempt.compliant.is_(True))
+        select(func.count()).select_from(ContactAttempt).where(ContactAttempt.consent_verified.is_(True))
     ) or 0
 
     by_type: dict[str, int] = defaultdict(int)
@@ -189,12 +189,12 @@ def build_compliance_snapshot(db: Session) -> dict[str, Any]:
     state_counts = _build_state_compliance(events_90)
     recent = [
         {
-            "id": event.event_id,
-            "date": _iso_value(event.occurred_at),
+            "id": event.id,
+            "date": _iso_value(event.created_at),
             "type": event.event_type,
-            "description": event.message,
+            "description": event.description,
             "severity": event.severity,
-            "resolution": event.resolution or ("Resolved" if event.resolved else "Open"),
+            "resolution": event.resolution or ("Resolved" if event.resolved_at else "Open"),
         }
         for event in events_30[:20]
     ]
@@ -255,8 +255,8 @@ def build_tokenization_snapshot(db: Session) -> dict[str, Any]:
             Account.debt_type,
             func.count(Account.id),
             func.coalesce(func.sum(Account.original_balance), 0),
-            func.coalesce(func.sum(Account.balance), 0),
-            func.coalesce(func.sum(Account.total_paid), 0),
+            func.coalesce(func.sum(Account.current_balance), 0),
+            func.coalesce(func.sum(Account.total_payments), 0),
             func.avg(Account.recovery_probability),
         ).group_by(Account.debt_type)
     ).all()
@@ -291,7 +291,7 @@ def build_tokenization_snapshot(db: Session) -> dict[str, Any]:
         db,
         select(func.coalesce(func.sum(Payment.amount), 0)).where(
             Payment.status == "completed",
-            Payment.recorded_at >= _now() - timedelta(days=30),
+            Payment.created_at >= _now() - timedelta(days=30),
         ),
     )
     avg_yield = _safe_ratio(recent_payments, total_face_value or Decimal("1"))
@@ -538,8 +538,8 @@ def _build_queue_metrics(
         select(func.count()).select_from(Account).where(Account.status == "ingested")
     ) or 0
 
-    recent_contacts = _count_since(db, ContactAttempt.attempted_at, timedelta(hours=24))
-    recent_payments = _count_since(db, Payment.recorded_at, timedelta(hours=24))
+    recent_contacts = _count_since(db, ContactAttempt.created_at, timedelta(hours=24))
+    recent_payments = _count_since(db, Payment.created_at, timedelta(hours=24))
     recent_uploads = _count_since(db, Account.created_at, timedelta(hours=24))
 
     queues = {
@@ -601,7 +601,7 @@ def _build_state_compliance(events: list[ComplianceEvent]) -> dict[str, Any]:
     attention_states: list[str] = []
     for state in sorted(states):
         state_events = states[state]
-        has_attention = any(not event.resolved and event.severity in {"high", "critical", "warning"} for event in state_events)
+        has_attention = any(not event.resolved_at and event.severity in {"high", "critical", "warning"} for event in state_events)
         if has_attention:
             requires_attention += 1
             attention_states.append(state)
@@ -634,7 +634,7 @@ def _daily_series(db: Session, column: Any, amount_column: Any, *filters: Any) -
 
 
 def _daily_recovery_rate_series(db: Session) -> list[list[Any]]:
-    revenue_series = _daily_series(db, Payment.recorded_at, Payment.amount, Payment.status == "completed")
+    revenue_series = _daily_series(db, Payment.created_at, Payment.amount, Payment.status == "completed")
     total_face_value = float(
         _decimal_scalar(db, select(func.coalesce(func.sum(Account.original_balance), 0))) or Decimal("0")
     )
@@ -651,7 +651,8 @@ def _avg_time_in_stage(db: Session, stage: str) -> str:
     rows = db.scalars(select(Account).where(Account.status == stage)).all()
     if not rows:
         return "N/A"
-    deltas = [_now() - (account.updated_at or account.created_at) for account in rows]
+    now = _now()
+    deltas = [now - (account.updated_at or account.created_at) for account in rows]
     avg_seconds = sum(delta.total_seconds() for delta in deltas) / len(deltas)
     return _format_duration(avg_seconds)
 
@@ -747,7 +748,7 @@ def _rating_for_score(score: float) -> str:
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _iso_now() -> str:

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { createEmptyComplianceData, ComplianceData, fetchCompliance } from "@/lib/api";
-import { FileCheck, MapPin, Shield, TriangleAlert } from "lucide-react";
+import { FileCheck, MapPin, Shield, AlertTriangle } from "lucide-react";
 
 export default function CompliancePage() {
   const [data, setData] = useState<ComplianceData>(createEmptyComplianceData());
@@ -68,7 +68,7 @@ export default function CompliancePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <KPICard title="Overall Compliance" value={`${data.overall_score.score.toFixed(1)}%`} icon={<Shield className="h-4 w-4" />} description={data.overall_score.rating} />
           <KPICard title="Audit Readiness" value={`${data.audit_readiness.score.toFixed(1)}%`} icon={<FileCheck className="h-4 w-4" />} description={data.audit_readiness.overall_readiness} />
-          <KPICard title="Violations (30d)" value={data.violations.total_30d.toString()} icon={<TriangleAlert className="h-4 w-4" />} />
+          <KPICard title="Violations (30d)" value={data.violations.total_30d.toString()} icon={<AlertTriangle className="h-4 w-4" />} />
           <KPICard title="States Compliant" value={`${data.state_compliance.fully_compliant}`} icon={<MapPin className="h-4 w-4" />} description={`${data.state_compliance.requires_attention} need review`} />
         </div>
 

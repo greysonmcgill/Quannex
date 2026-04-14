@@ -80,26 +80,23 @@ def main() -> None:
         chunk_size = max(args.count // len(debt_types), 1)
         for index, debt_type in enumerate(debt_types, start=1):
             portfolio = Portfolio(
-                portfolio_id=str(uuid.uuid4()),
                 name=f"{debt_type.replace('_', ' ').title()} Seed Portfolio {index}",
-                source_filename=f"{debt_type}_seed.csv",
-                debt_mix={debt_type: chunk_size},
-                uploaded_count=0,
-                valid_count=0,
-                rejected_count=0,
+                source_file=f"{debt_type}_seed.csv",
+                upload_status="completed",
+                total_accounts=0,
+                total_balance=0,
+                valid_rows=0,
+                invalid_rows=0,
             )
             db.add(portfolio)
             db.flush()
             portfolio_ids.append((debt_type, portfolio.id))
             db.add(
                 Campaign(
-                    campaign_id=str(uuid.uuid4()),
-                    portfolio_id=portfolio.id,
                     name=f"{debt_type.title()} Recovery Campaign",
-                    status="active",
-                    stage="scoring",
+                    portfolio_id=portfolio.id,
+                    status="running",
                     started_at=datetime.now(timezone.utc) - timedelta(days=random.randint(1, 45)),
-                    metadata_json={"seeded": True},
                 )
             )
 
@@ -147,10 +144,10 @@ def main() -> None:
                 updated_at = created_at + timedelta(days=random.randint(0, 45))
 
                 account = Account(
-                    account_id=account_id,
+                    external_account_id=account_id,
                     portfolio_id=portfolio_id,
                     debtor_name=debtor_name,
-                    balance=balance,
+                    current_balance=balance,
                     original_balance=original_balance,
                     original_creditor=original_creditor,
                     debt_type=debt_type,
@@ -162,8 +159,11 @@ def main() -> None:
                     recovery_probability=strategy.recovery_probability,
                     optimal_channels=strategy.optimal_channels,
                     settlement_threshold=strategy.settlement_threshold,
-                    total_paid=total_paid,
-                    total_contact_attempts=0,
+                    total_payments=total_paid,
+                    contact_attempts_count=0,
+                    payment_willingness=payment_willingness,
+                    has_mobile=has_phone,
+                    age=random.randint(24, 67),
                     created_at=created_at,
                     updated_at=updated_at,
                 )
@@ -173,39 +173,35 @@ def main() -> None:
                 contact_count = random.randint(0, 4)
                 for attempt_index in range(contact_count):
                     channel = random.choice(CHANNELS)
-                    attempted_at = created_at + timedelta(days=attempt_index * random.randint(2, 8))
-                    compliant = random.random() > 0.08
+                    contact_at = created_at + timedelta(days=attempt_index * random.randint(2, 8))
+                    consent_ok = random.random() > 0.08
                     outcome = random.choice(
-                        ["no_answer", "responded", "promise_to_pay", "voicemail", "payment_made"]
+                        ["no_answer", "connected", "left_message", "delivered", "bounced"]
                     )
                     db.add(
                         ContactAttempt(
-                            attempt_id=str(uuid.uuid4()),
-                            account_db_id=account.id,
+                            account_id=account.id,
                             channel=channel,
                             outcome=outcome,
-                            compliant=compliant,
+                            consent_verified=consent_ok,
+                            within_contact_hours=random.random() > 0.05,
                             cost=CHANNEL_COSTS[channel],
-                            agent_name="Seed Runner",
-                            notes="Generated seed outreach.",
-                            attempted_at=attempted_at,
+                            created_at=contact_at,
                         )
                     )
-                    account.total_contact_attempts += 1
-                    account.last_contact_at = attempted_at
+                    account.contact_attempts_count += 1
+                    account.last_contact_date = contact_at
 
-                    if not compliant:
+                    if not consent_ok:
                         db.add(
                             ComplianceEvent(
-                                event_id=str(uuid.uuid4()),
-                                account_db_id=account.id,
-                                event_type=random.choice(["timing", "frequency", "disclosure"]),
-                                severity=random.choice(["warning", "high"]),
-                                message=f"Seeded compliance exception on {channel} attempt.",
+                                account_id=account.id,
+                                event_type=random.choice(["contact_attempt", "tcpa_violation", "fdcpa_violation"]),
+                                severity=random.choice(["warning", "critical"]),
+                                description=f"Seeded compliance exception on {channel} attempt.",
                                 resolution="Pending QA review.",
                                 state=state,
-                                resolved=random.random() > 0.5,
-                                occurred_at=attempted_at,
+                                created_at=contact_at,
                             )
                         )
 
@@ -215,43 +211,42 @@ def main() -> None:
                         amount = (
                             total_paid if payment_count == 1 else (total_paid / payment_count).quantize(Decimal("0.01"))
                         )
-                        recorded_at = updated_at - timedelta(days=max(payment_count - payment_index, 0))
+                        pay_at = updated_at - timedelta(days=max(payment_count - payment_index, 0))
                         db.add(
                             Payment(
-                                payment_id=str(uuid.uuid4()),
-                                account_db_id=account.id,
+                                account_id=account.id,
                                 amount=amount,
-                                method=random.choice(["card", "ach", "digital_wallet"]),
+                                payment_method=random.choice(["card", "ach"]),
                                 status="completed",
-                                reference=f"seed-{uuid.uuid4().hex[:8]}",
-                                notes="Seeded payment history.",
-                                recorded_at=recorded_at,
+                                processed_at=pay_at,
+                                created_at=pay_at,
                             )
                         )
-                        account.last_payment_at = recorded_at
+                        account.last_payment_date = pay_at
 
                 if random.random() < 0.03:
                     db.add(
                         ComplianceEvent(
-                            event_id=str(uuid.uuid4()),
-                            account_db_id=account.id,
-                            event_type="consent",
+                            account_id=account.id,
+                            event_type="consent_obtained",
                             severity="info",
-                            message="Consent confirmation logged during seed generation.",
+                            description="Consent confirmation logged during seed generation.",
                             resolution="Automatically resolved.",
+                            resolved_at=updated_at,
                             state=state,
-                            resolved=True,
-                            occurred_at=updated_at,
+                            created_at=updated_at,
                         )
                     )
 
-            portfolio = db.query(Portfolio).filter(Portfolio.id == portfolio_id).first()
-            if portfolio:
+            portfolio_obj = db.query(Portfolio).filter(Portfolio.id == portfolio_id).first()
+            if portfolio_obj:
                 type_count = db.query(Account).filter(Account.portfolio_id == portfolio_id).count()
-                portfolio.uploaded_count = type_count
-                portfolio.valid_count = type_count
-                portfolio.rejected_count = 0
-                portfolio.debt_mix = {debt_type: type_count}
+                total_bal = db.query(Account).filter(Account.portfolio_id == portfolio_id).with_entities(
+                    Account.current_balance
+                ).all()
+                portfolio_obj.total_accounts = type_count
+                portfolio_obj.total_balance = sum(float(r[0] or 0) for r in total_bal)
+                portfolio_obj.valid_rows = type_count
 
         db.commit()
         print(f"Seeded {created_accounts} accounts across {len(portfolio_ids)} portfolios.")

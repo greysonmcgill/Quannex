@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-QUAN Systemic Thesis PDF Generator
+Quannex Systemic Thesis PDF Generator
 
 Generates a professional PDF of the foundational thesis document:
 "Systemic Latency: The Structural Incompatibility of Legacy Collections
@@ -233,7 +233,7 @@ def build_cover_page(s):
     """Build the cover page."""
     elements = []
     elements.append(Spacer(1, 1.5 * inch))
-    elements.append(Paragraph("QUAN Recovery", s['title']))
+    elements.append(Paragraph("Quannex", s['title']))
     elements.append(Spacer(1, 0.3 * inch))
 
     # Main title
@@ -250,7 +250,7 @@ def build_cover_page(s):
 
     elements.append(Spacer(1, 0.2 * inch))
     elements.append(Paragraph(
-        "A Foundational Analysis for QUAN Recovery",
+        "A Foundational Analysis for Quannex",
         s['subtitle'],
     ))
 
@@ -259,9 +259,9 @@ def build_cover_page(s):
     # Metadata table
     meta = [
         ["Author:", "Greyson McGill, Founder & CEO"],
-        ["Organization:", "QUAN Recovery"],
-        ["Contact:", "greyson@quanrecovery.com"],
-        ["Version:", "2.0"],
+        ["Organization:", "Quannex"],
+        ["Contact:", "greyson@quannex.com"],
+        ["Version:", "3.0"],
         ["Date:", datetime.now().strftime('%B %Y')],
         ["Classification:", "Strategic Foundation Document"],
     ]
@@ -307,15 +307,17 @@ def build_table_of_contents(s):
         ("5.", "The Data Infrastructure Void: Metro 2 and the \"Credit Invisible\""),
         ("6.", "Behavioral Economics: The Psychology of Micro-Debt"),
         ("7.", "The Technological Remediation: Agentic AI and the Compute-Centric Model"),
-        ("8.", "The Financial Remediation: Tokenization and DeFi Liquidity"),
-        ("9.", "Conclusion: The Inevitable Transition"),
+        ("8.", "The Platform Roadmap: From Recovery Engine to Liquidity Infrastructure"),
+        ("9.", "Competitive Landscape: Why Incumbents Cannot Close the Gap"),
+        ("10.", "Quannex Unit Economics: The Cost Advantage in Practice"),
+        ("11.", "Conclusion: The Inevitable Transition"),
     ]
 
     for num, title in sections:
         elements.append(Paragraph(f"<b>{num}</b>  {title}", toc_style))
 
     elements.append(Spacer(1, 0.3 * inch))
-    elements.append(Paragraph("<b>Appendix:</b>  Works Cited (44 Sources)", toc_style))
+    elements.append(Paragraph("<b>Appendix:</b>  Works Cited (51 Sources)", toc_style))
 
     elements.append(PageBreak())
     return elements
@@ -375,8 +377,8 @@ def build_section_1(s):
         'safeguard', s['bullet'],
     ))
     elements.append(Paragraph(
-        '<b>3. Market Failure:</b> $400B+ in recoverable value abandoned annually due to negative '
-        'unit economics', s['bullet'],
+        '<b>3. Market Failure:</b> Over $150B in total consumer debt charged off annually [45], of which '
+        '$37.4B sits in a structural \"dead zone\" where recovery costs exceed the debt itself', s['bullet'],
     ))
 
     elements.append(Spacer(1, 0.15 * inch))
@@ -791,63 +793,144 @@ def build_section_7(s):
 
 
 def build_section_8(s):
-    """Section 8: Tokenization and DeFi."""
+    """Section 8: Platform Roadmap -- From Recovery to Liquidity."""
     elements = []
     elements.append(Paragraph(
-        "8. The Financial Remediation: Tokenization and DeFi Liquidity", s['h1'],
+        "8. The Platform Roadmap: From Recovery Engine to Liquidity Infrastructure", s['h1'],
     ))
     elements.append(divider())
 
     elements.append(Paragraph(
-        "While AI solves the recovery problem, it does not solve the liquidity problem for lenders "
-        "holding millions in non-performing micro-loans. The solution: securitization via blockchain.",
+        "AI solves the recovery problem. But the full market opportunity requires solving the "
+        "liquidity problem as well--lenders holding millions in non-performing micro-loans need "
+        "a way to recycle capital. Quannex's roadmap addresses both in sequence, "
+        "building credibility at each phase before expanding scope.",
         s['body'],
     ))
 
-    elements.append(Paragraph("8.1 The Illiquidity of NPL Portfolios", s['h2']))
-    elements.append(Paragraph(
-        "Selling charged-off BNPL debt is slow and opaque. The bid-ask spread is massive because "
-        "buyers don't trust data quality and can't easily verify assets.",
-        s['body'],
-    ))
-
-    elements.append(Paragraph("8.2 Real-World Asset (RWA) Tokenization", s['h2']))
-    elements.append(Paragraph(
-        "Protocols like <b>Centrifuge</b> move securitization on-chain. Each debt (or batch) is "
-        "minted as an NFT with immutable metadata (origination, payment history, risk score). "
-        "Buyers can audit entire portfolio performance in real-time, eliminating the \"lemon market\" problem.",
-        s['body'],
-    ))
-
-    elements.append(Paragraph("8.3 The Tinlake Tranche Model", s['h2']))
-    for item in [
-        "<b>DROP Token (Senior Tranche):</b> Paid first, lower yield (5-8%), protected against first-wave defaults",
-        "<b>TIN Token (Junior Tranche):</b> First-loss position, upside yield (12-20%), paid after DROP holders satisfied",
-        "<b>Algorithmic Waterfall:</b> Smart contract auto-routes repayments. No servicer fees or delays. The code is the servicer",
-    ]:
-        elements.append(Paragraph(f"- {item}", s['bullet']))
-
-    # Table 4: Tokenized Debt Stack
-    ts_data = [
-        ["Layer", "Function", "Technology / Mechanism"],
-        ["Asset Originator", "Originates the loan\n(BNPL, Invoice)", "Fintech App / Lender"],
-        ["Tokenization", "Mints NFT representing\nasset/collateral", "Centrifuge P2P Protocol"],
-        ["Pooling", "Aggregates NFTs into\nsmart contract pool", "Tinlake / Centrifuge Chain"],
-        ["Tranching", "Splits risk into Senior\n(DROP) and Junior (TIN)", "Smart Contract Logic"],
-        ["Liquidity", "Provides capital against\ntokens", "DeFi Protocols\n(MakerDAO, Aave)"],
-        ["Servicing", "Collects payments,\ndistributes to tranches", "Automated Waterfall\nContract"],
+    # Phase roadmap table
+    phase_data = [
+        ["Phase", "Focus", "Timeline", "Revenue Model"],
+        ["Phase 1\n(Launch)", "Autonomous AI\nRecovery Engine", "Now - Q4 2026", "Contingency fee\n(% of recovered $)"],
+        ["Phase 2\n(Scale)", "Portfolio Analytics\n& Secondary Market Data", "2027", "SaaS subscription +\ndata licensing"],
+        ["Phase 3\n(Platform)", "Tokenized Debt\nInstruments", "2028+", "Marketplace fees +\nservicing revenue"],
     ]
     elements.extend(make_table(
-        ts_data, [1.2 * inch, 2.0 * inch, 2.2 * inch],
-        "Table 4: The Tokenized Debt Stack (Centrifuge/Tinlake Model)",
+        phase_data, [0.9 * inch, 1.6 * inch, 1.2 * inch, 1.7 * inch],
+        "Table 4: Quannex Platform Roadmap",
         s,
     ))
 
-    elements.append(Paragraph("8.4 DeFi Integration", s['h2']))
+    elements.append(Paragraph("8.1 Phase 1: Autonomous Recovery (Current Focus)", s['h2']))
     elements.append(Paragraph(
-        "This infrastructure lets BNPL lenders access global DeFi liquidity. Originate loans, "
-        "tokenize them, pledge as collateral to MakerDAO or Aave, and borrow stablecoins (USDC) "
-        "instantly. This \"capital velocity\" recycles funds far faster than traditional bank facilities.",
+        "The immediate product is the agentic AI recovery engine described in Section 7. This is the "
+        "core business: ingest micro-debt portfolios, autonomously recover value at $1.00/account, and "
+        "charge a contingency fee on recovered dollars. Phase 1 generates revenue from Day 1, validates "
+        "recovery rates against simulation projections, and builds the performance track record that "
+        "unlocks everything downstream.",
+        s['body'],
+    ))
+    for item in [
+        "<b>Target Clients:</b> BNPL originators, subscription platforms, telecom/utility providers "
+        "with charged-off micro-balances they currently write off",
+        "<b>Delivery Model:</b> SaaS platform -- clients upload portfolios via CSV or API, Quannex's "
+        "engine handles the full recovery lifecycle autonomously",
+        "<b>Key Milestone:</b> Live pilot with a BNPL originator processing real charged-off accounts "
+        "(Target: Q3 2026)",
+    ]:
+        elements.append(Paragraph(f"- {item}", s['bullet']))
+
+    elements.append(Paragraph("8.2 Phase 2: Portfolio Analytics and Secondary Market Data", s['h2']))
+    elements.append(Paragraph(
+        "As Quannex processes millions of accounts, it accumulates something no one else has: "
+        "granular, real-time recovery performance data on micro-debt asset classes. This data "
+        "becomes a product itself.",
+        s['body'],
+    ))
+    for item in [
+        "<b>Recovery Benchmarks:</b> Actual recovery rates by debt type, balance tier, geography, "
+        "debtor segment, and contact channel -- priced and sold to debt buyers, originators, and "
+        "credit risk teams",
+        "<b>Portfolio Valuation:</b> AI-powered pricing models for NPL portfolios based on observed "
+        "recovery curves, replacing the opaque broker-driven bid process",
+        "<b>Buyer Marketplace:</b> A data-transparent marketplace where debt buyers can evaluate "
+        "portfolios with auditable performance metrics before purchasing",
+    ]:
+        elements.append(Paragraph(f"- {item}", s['bullet']))
+
+    elements.append(Spacer(1, 0.1 * inch))
+    elements.append(Paragraph(
+        "Phase 2 transforms Quannex from a recovery tool into a data infrastructure company. "
+        "The transition is organic: the same accounts processed in Phase 1 generate the data "
+        "that powers Phase 2.",
+        s['body'],
+    ))
+
+    elements.append(Paragraph("8.3 Phase 3: Tokenized Debt Instruments (Future Platform)", s['h2']))
+    elements.append(Paragraph(
+        "With auditable recovery track records from Phases 1 and 2, Quannex can facilitate the "
+        "securitization of micro-debt portfolios into tradeable instruments--creating liquidity for "
+        "an asset class that currently has none.",
+        s['body'],
+    ))
+
+    elements.append(Paragraph("The Mechanism", s['h3']))
+    elements.append(Paragraph(
+        "Protocols like <b>Centrifuge</b> have demonstrated on-chain securitization for real-world assets. "
+        "Each debt pool is represented as an NFT with immutable metadata (origination, payment history, "
+        "AI-predicted recovery score). Buyers can audit portfolio performance in real-time, eliminating "
+        "the \"lemon market\" problem that plagues traditional NPL sales.",
+        s['body'],
+    ))
+    for item in [
+        "<b>Senior Tranche (DROP):</b> Paid first, lower yield (5-8%), protected against first-wave defaults",
+        "<b>Junior Tranche (TIN):</b> First-loss position, upside yield (12-20%), paid after senior holders",
+        "<b>Algorithmic Waterfall:</b> Smart contract auto-routes repayments -- the code is the servicer",
+    ]:
+        elements.append(Paragraph(f"- {item}", s['bullet']))
+
+    # Table: Tokenized Debt Stack
+    ts_data = [
+        ["Layer", "Function", "Technology / Mechanism"],
+        ["Asset Originator", "Originates the loan\n(BNPL, Invoice)", "Fintech App / Lender"],
+        ["Recovery Layer", "AI-driven collection\n+ performance data", "Quannex Platform"],
+        ["Tokenization", "Mints NFT representing\nasset/collateral", "Centrifuge P2P Protocol"],
+        ["Pooling", "Aggregates NFTs into\nsmart contract pool", "Tinlake / Centrifuge Chain"],
+        ["Tranching", "Splits risk into Senior\nand Junior tranches", "Smart Contract Logic"],
+        ["Liquidity", "Provides capital against\ntokens", "DeFi Protocols\n(MakerDAO, Aave)"],
+    ]
+    elements.extend(make_table(
+        ts_data, [1.2 * inch, 2.0 * inch, 2.2 * inch],
+        "Table 5: The Tokenized Debt Stack with Quannex Recovery Layer",
+        s,
+    ))
+
+    elements.append(Paragraph("Regulatory Path", s['h3']))
+    elements.append(Paragraph(
+        "Tokenized debt securities face real regulatory constraints. Quannex's approach is pragmatic:",
+        s['body'],
+    ))
+    for item in [
+        "<b>SEC Classification:</b> Tokenized tranches are securities under the Howey test. Quannex's Phase 3 "
+        "operates under Regulation D (506(c)) for accredited investors initially, with a Regulation A+ path "
+        "for broader access as track record develops [46]",
+        "<b>Money Transmitter Licensing:</b> Smart contract payment flows trigger MTL requirements. "
+        "Quannex partners with licensed payment processors rather than building custodial infrastructure",
+        "<b>Bankruptcy Remoteness:</b> Assets are legally isolated via Delaware statutory trusts "
+        "(the same SPV structure used in traditional ABS) with on-chain record-keeping, not on-chain custody",
+        "<b>CFPB Servicing:</b> AI-driven servicing must still comply with FDCPA validation notices "
+        "and dispute resolution timelines. Quannex's compliance engine (Section 7.2) enforces this programmatically",
+    ]:
+        elements.append(Paragraph(f"- {item}", s['bullet']))
+
+    elements.append(Spacer(1, 0.1 * inch))
+    elements.append(Paragraph("8.4 Why the Phases Must Be Sequential", s['h2']))
+    elements.append(Paragraph(
+        "Tokenization without proven recovery is vaporware. The legal frameworks for securitization "
+        "already exist and are well-tested--the missing ingredient is a <b>performant underlying asset</b>. "
+        "Micro-debts that recover at 0% are worthless to tokenize. Micro-debts that recover at 12-18% "
+        "through Quannex's AI engine become a viable, data-rich asset class. Phase 1 creates the asset. "
+        "Phase 2 proves its value. Phase 3 makes it liquid.",
         s['body'],
     ))
 
@@ -855,11 +938,195 @@ def build_section_8(s):
     return elements
 
 
-def build_section_9(s):
-    """Section 9: Conclusion."""
+def build_section_9_competitive(s):
+    """Section 9: Competitive Landscape."""
     elements = []
     elements.append(Paragraph(
-        "9. Conclusion: The Inevitable Transition", s['h1'],
+        "9. Competitive Landscape: Why Incumbents Cannot Close the Gap", s['h1'],
+    ))
+    elements.append(divider())
+
+    elements.append(Paragraph(
+        "Several companies are applying technology to debt collection. None are architected to solve "
+        "the micro-debt unit economics problem that defines Quannex's addressable market.",
+        s['body'],
+    ))
+
+    elements.append(Paragraph("9.1 The Current Players", s['h2']))
+
+    comp_data = [
+        ["Company", "Approach", "Limitation", "Min. Viable Debt"],
+        ["TrueAccord\n(2013, $50M+)", "ML-optimized email/SMS\nsequencing for digital-first\ncollection", "Optimizes channel timing, not\ncost structure. Still charges\n15-40% contingency fees", "$200+"],
+        ["Symend\n(2016, $100M+)", "Behavioral science SaaS\nfor pre-delinquency\nengagement", "Sells to banks as a retention\ntool, not a collector. Does not\nown the recovery P&L", "N/A\n(SaaS model)"],
+        ["Indebted\n(2016, $47M)", "AI-powered digital\ncollection platform\n(Australia-first)", "Geographic focus on ANZ/UK.\nU.S. compliance engine not\nbuilt for 50-state complexity", "$100+"],
+        ["Prodigal\n(2018, $30M+)", "AI call analytics and\ncompliance monitoring\nfor existing agencies", "Augments humans, does not\nreplace them. The human agent\ncost floor remains", "$200+"],
+        ["Kredit (Skit.ai)\n(2021)", "AI voice agents for\noutbound collection\ncalls", "Voice-only channel. No\norchestration, no settlement\nengine, no tokenization layer", "$100+"],
+    ]
+    elements.extend(make_table(
+        comp_data, [1.2 * inch, 1.6 * inch, 1.7 * inch, 0.9 * inch],
+        "Table 5: Competitive Landscape -- AI Collections Entrants",
+        s,
+    ))
+
+    elements.append(Paragraph("9.2 Why Quannex Is Structurally Different", s['h2']))
+    elements.append(Paragraph(
+        "The competitors above share a common limitation: they optimize within the existing collections "
+        "architecture rather than replacing it. They make human agents more efficient, or automate a "
+        "single channel, or reduce churn before charge-off. None of them address the fundamental "
+        "question: <b>how do you profitably recover a $50 debt?</b>",
+        s['body'],
+    ))
+
+    elements.append(Spacer(1, 0.1 * inch))
+    elements.append(Paragraph("Quannex's moat is the integration of three layers that no competitor combines:", s['body']))
+    for item in [
+        "<b>Layer 1 -- Autonomous Full-Lifecycle Recovery:</b> Not just contact optimization, but end-to-end "
+        "account management from ingestion through settlement, with zero human labor below $1,000. "
+        "Multi-channel orchestration (voice, SMS, email, digital) with a compliance engine that enforces "
+        "FDCPA/TCPA/Reg F and all 50 state laws programmatically",
+        "<b>Layer 2 -- Vertical Intelligence:</b> ML models trained specifically on micro-debt behavioral "
+        "patterns (payment willingness scoring, channel responsiveness, settlement threshold prediction). "
+        "Not a generic LLM wrapper--a purpose-built recovery intelligence engine with 147-dimension "
+        "feature space for debtor segmentation",
+        "<b>Layer 3 -- Liquidity Infrastructure:</b> Tokenization of recovered and recovering portfolios "
+        "into tradeable instruments, creating a secondary market for an asset class that currently has "
+        "zero liquidity. This is the true platform play--Quannex becomes the exchange, not just the servicer",
+    ]:
+        elements.append(Paragraph(f"- {item}", s['bullet']))
+
+    elements.append(Spacer(1, 0.1 * inch))
+    elements.append(Paragraph(
+        "The result: Quannex does not compete with TrueAccord for the same $5,000 credit card portfolio. "
+        "Quannex operates in the $37.4B dead zone that every other player has written off as unrecoverable.",
+        s['body'],
+    ))
+
+    elements.append(PageBreak())
+    return elements
+
+
+def build_section_10_unit_economics(s):
+    """Section 10: Quannex Unit Economics."""
+    elements = []
+    elements.append(Paragraph(
+        "10. Quannex Unit Economics: The Cost Advantage in Practice", s['h1'],
+    ))
+    elements.append(divider())
+
+    elements.append(Paragraph(
+        "Section 3 demonstrated that legacy collections break even only above ~$250. "
+        "Quannex's architecture fundamentally reshapes this equation.",
+        s['body'],
+    ))
+
+    elements.append(Paragraph("10.1 Quannex's Cost-to-Collect Per Account", s['h2']))
+    elements.append(Paragraph(
+        "Based on current API pricing for AI voice, SMS, and email channels, and our platform's "
+        "orchestration efficiency, Quannex's projected fully-loaded cost per account is:",
+        s['body'],
+    ))
+
+    cost_data = [
+        ["Cost Component", "Per Account", "Notes"],
+        ["AI Voice (avg 2.3 min)", "$0.35", "Retell/Vapi at $0.08-0.15/min\n+ TTS/STT overhead"],
+        ["SMS Sequence (avg 4 msgs)", "$0.08", "Twilio at $0.02/msg"],
+        ["Email Sequence (avg 3 msgs)", "$0.03", "SendGrid at $0.01/msg"],
+        ["ML Scoring + Routing", "$0.02", "Amortized GPU inference"],
+        ["Compliance Engine", "$0.01", "Per-account rule evaluation"],
+        ["Payment Processing", "$0.45", "Stripe 2.9% on avg $15 recovery"],
+        ["Infrastructure (amort.)", "$0.06", "Cloud compute per account"],
+        ["TOTAL", "$1.00", "Fully loaded cost per account"],
+    ]
+    elements.extend(make_table(
+        cost_data, [1.8 * inch, 1.0 * inch, 2.6 * inch],
+        "Table 6: Quannex Projected Cost-to-Collect Per Account",
+        s,
+    ))
+
+    elements.append(Paragraph("10.2 Break-Even Comparison: Legacy vs. Quannex", s['h2']))
+
+    be_data = [
+        ["Debt Balance", "Legacy Break-Even\nRecovery Rate", "Quannex Break-Even\nRecovery Rate", "Quannex Margin\nat 15% Recovery"],
+        ["$500", "9.4%", "0.13%", "$74.00 (98.7%)"],
+        ["$200", "23.5%", "0.33%", "$29.00 (96.7%)"],
+        ["$100", "47.0%", "0.67%", "$14.00 (93.3%)"],
+        ["$50", "94.0%", "1.33%", "$6.50 (86.7%)"],
+        ["$25", "Impossible", "2.67%", "$2.75 (73.3%)"],
+    ]
+    elements.extend(make_table(
+        be_data, [0.9 * inch, 1.4 * inch, 1.4 * inch, 1.6 * inch],
+        "Table 7: Break-Even Analysis -- Legacy Model vs. Quannex at $1.00/account CTC",
+        s,
+    ))
+
+    elements.append(Spacer(1, 0.1 * inch))
+    elements.append(Paragraph(
+        "At $1.00 per account, Quannex breaks even at a 1.33% recovery rate on a $50 debt--compared "
+        "to the 94% required by legacy. Even conservative 15% recovery rates yield 87%+ gross margins "
+        "on micro-debt, transforming a structurally impossible business into a high-margin one.",
+        s['body'],
+    ))
+
+    elements.append(Paragraph("10.3 Portfolio-Level Projections", s['h2']))
+    elements.append(Paragraph(
+        "Modeled against the $37.4B dead zone market (Section 3.5), assuming Quannex captures "
+        "1% of addressable volume in Year 1 with a blended 12% recovery rate:",
+        s['body'],
+    ))
+
+    portfolio_data = [
+        ["Metric", "Year 1 Projection", "Year 3 Projection"],
+        ["Accounts Under Management", "2.5M", "25M"],
+        ["Face Value of Portfolios", "$374M", "$3.74B"],
+        ["Blended Recovery Rate", "12%", "18%"],
+        ["Gross Recovery Revenue", "$44.9M", "$673M"],
+        ["Total Operating Cost", "$2.5M", "$25M"],
+        ["Gross Margin", "$42.4M (94.4%)", "$648M (96.3%)"],
+        ["Revenue (30% contingency)", "$13.5M", "$202M"],
+    ]
+    elements.extend(make_table(
+        portfolio_data, [1.8 * inch, 1.5 * inch, 1.5 * inch],
+        "Table 8: Quannex Portfolio-Level Financial Projections",
+        s,
+    ))
+
+    elements.append(Paragraph("10.4 Early Validation", s['h2']))
+    elements.append(Paragraph(
+        "Quannex's platform simulation environment has processed 1M+ synthetic accounts across "
+        "10 debt categories, validating the core architecture:",
+        s['body'],
+    ))
+    for item in [
+        "<b>Simulation Results:</b> 6 consumer behavioral archetypes (Prompt Payer, Negotiator, "
+        "Plan Keeper, Plan Breaker, Ghost, Hostile) modeled across BNPL, medical, telecom, "
+        "subscription, utility, and other micro-debt categories",
+        "<b>Platform Operational:</b> Full-stack application with FastAPI backend, Next.js dashboard, "
+        "real-time analytics, and compliance-first account pipeline running in local and containerized "
+        "environments",
+        "<b>ML Pipeline Active:</b> Payment probability prediction, debtor segmentation (graph-based), "
+        "channel optimization (multi-armed bandit), and settlement recommendation engines operational "
+        "with synthetic data",
+        "<b>Compliance Engine Built:</b> Programmatic FDCPA, TCPA, Regulation F, and 50-state "
+        "rule enforcement with contact frequency governors and consent tracking",
+    ]:
+        elements.append(Paragraph(f"- {item}", s['bullet']))
+
+    elements.append(Spacer(1, 0.1 * inch))
+    elements.append(Paragraph(
+        "<b>Next Milestone:</b> Live pilot with a single BNPL originator processing real charged-off "
+        "accounts to validate recovery rates against simulation projections. Target: Q3 2026.",
+        s['body'],
+    ))
+
+    elements.append(PageBreak())
+    return elements
+
+
+def build_section_11_conclusion(s):
+    """Section 11: Conclusion."""
+    elements = []
+    elements.append(Paragraph(
+        "11. Conclusion: The Inevitable Transition", s['h1'],
     ))
     elements.append(divider())
 
@@ -888,19 +1155,20 @@ def build_section_9(s):
         s['body'],
     ))
 
-    elements.append(Paragraph("The QUAN Solution", s['h2']))
+    elements.append(Paragraph("The Quannex Solution", s['h2']))
     elements.append(Paragraph(
-        "QUAN is not disrupting an existing market. QUAN is <b>creating the infrastructure for a "
+        "Quannex is not disrupting an existing market. Quannex is <b>creating the infrastructure for a "
         "market that currently does not function</b>.",
         s['body'],
     ))
     elements.append(Paragraph(
-        "The $400B+ annually written off is not \"bad debt.\" It is <b>orphaned debt</b>--economically "
-        "recoverable value that the existing system has structurally abandoned.",
+        "The $37.4B annually stranded in the structural dead zone is not \"bad debt.\" It is "
+        "<b>orphaned debt</b>--economically recoverable value that the existing system has "
+        "structurally abandoned.",
         s['body'],
     ))
     elements.append(Paragraph(
-        "<b>QUAN is the architecture that resurrects it.</b>",
+        "<b>Quannex is the architecture that resurrects it.</b>",
         s['body'],
     ))
 
@@ -967,6 +1235,13 @@ def build_works_cited(s):
         "Centrifuge RWA - IEEE Transmitter",
         "Centrifuge V2 - Centrifuge Docs",
         "DeFi Weekly: Centrifuge -- Real-World Assets On-Chain - Coinmonks / Medium",
+        "Charge-Off and Delinquency Rates on Loans - Federal Reserve Board (2025)",
+        "Regulation D -- Rules Governing the Limited Offer and Sale of Securities - SEC",
+        "TrueAccord: Company Profile and Funding History - Crunchbase",
+        "Symend: Company Profile and Funding History - Crunchbase",
+        "InDebted: Company Profile and Funding History - Crunchbase",
+        "Prodigal Technologies: Company Profile and Funding History - Crunchbase",
+        "Retell AI: Voice AI Platform Pricing and Benchmarks - Retell AI (2025)",
     ]
 
     for i, cite in enumerate(citations, 1):
@@ -981,7 +1256,7 @@ def generate_thesis_pdf(output_dir: str = "./output") -> str:
     output_path.mkdir(exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    pdf_path = output_path / f"QUAN_Systemic_Thesis_{timestamp}.pdf"
+    pdf_path = output_path / f"Quannex_Systemic_Thesis_{timestamp}.pdf"
 
     doc = SimpleDocTemplate(
         str(pdf_path),
@@ -1006,7 +1281,9 @@ def generate_thesis_pdf(output_dir: str = "./output") -> str:
     elements.extend(build_section_6(s))
     elements.extend(build_section_7(s))
     elements.extend(build_section_8(s))
-    elements.extend(build_section_9(s))
+    elements.extend(build_section_9_competitive(s))
+    elements.extend(build_section_10_unit_economics(s))
+    elements.extend(build_section_11_conclusion(s))
     elements.extend(build_works_cited(s))
 
     doc.build(elements)
@@ -1017,7 +1294,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Generate QUAN Systemic Thesis PDF",
+        description="Generate Quannex Systemic Thesis PDF",
     )
     parser.add_argument(
         "--output", "-o", default="./output",
@@ -1027,7 +1304,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 60)
-    print("  QUAN SYSTEMIC THESIS PDF GENERATOR")
+    print("  Quannex SYSTEMIC THESIS PDF GENERATOR")
     print("=" * 60)
     print()
     print("Generating: Systemic Latency: The Structural Incompatibility")
