@@ -1,257 +1,144 @@
-"""QUAN Recovery - Main Application Entry Point"""
+"""Quannex Recovery — FastAPI application entry point.
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+This is the pilot surface of the collections OS. It exposes three routers:
+
+- ``/api/v1/portfolios`` — portfolio CSV ingestion and listing.
+- ``/api/v1/accounts``   — account listing, detail, status, contact, payment.
+- ``/api/v1/dashboard``  — operator, executive, and compliance reporting.
+
+Everything else in the repository (simulation engines, research modules,
+experimental agent controllers) lives outside this runtime. The goal here is
+a narrow, honest, pilot-shippable API.
+"""
+
+from __future__ import annotations
+
 from contextlib import asynccontextmanager
-from pathlib import Path
+from typing import AsyncIterator
 
-from quan.config import settings
-from quan.logging_config import configure_logging, get_logger
-from quan.ingestion import ingestion_router
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+
 from quan.api import accounts_router, dashboard_router, portfolio_router
-from quan.monitoring import get_metrics
+from quan.config import settings
+from quan.database import SessionLocal
+from quan.logging_config import configure_logging, get_logger
 
-# Configure logging at module load
 configure_logging()
 logger = get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Application lifespan handler"""
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Startup / shutdown hooks for the FastAPI app.
 
-    # Startup
-    logger.info(f"Starting QUAN Recovery API - {settings.environment}")
+    Intentionally minimal: the pilot does not bootstrap Kafka, Redis, or any
+    other optional infrastructure at startup. Optional integrations are wired
+    on demand at the call site.
+    """
 
-    # Initialize metrics
-    metrics = get_metrics()
-    metrics.update_active_campaigns(0)
-
-    # Initialize Kafka producer
-    try:
-        from quan.ingestion.kafka_producer import KafkaProducerClient
-        producer = KafkaProducerClient()
-        await producer.connect()
-        app.state.kafka_producer = producer
-    except Exception as e:
-        logger.warning(f"Kafka not available: {e}")
-
+    logger.info(
+        "Starting Quannex Recovery API",
+        extra={"environment": settings.environment, "debug": settings.debug},
+    )
     yield
-
-    # Shutdown
-    logger.info("Shutting down QUAN Recovery API")
-
-    if hasattr(app.state, "kafka_producer"):
-        await app.state.kafka_producer.disconnect()
+    logger.info("Shutting down Quannex Recovery API")
 
 
 app = FastAPI(
-    title="QUAN Recovery API",
-    description="AI-Powered Micro-Debt Collection Platform",
+    title="Quannex Recovery API",
+    description="Collections operating system for small-balance debt portfolios.",
     version="0.1.0",
     lifespan=lifespan,
 )
 
-# CORS middleware
+
+# -- CORS --------------------------------------------------------------------
+_dev_modes = {"development", "dev", "local"}
+_allow_all = settings.debug or settings.environment.lower() in _dev_modes
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://quanrecovery.com",
-    ] if not settings.debug and settings.environment != "development" else ["*"],
+    allow_origins=["*"] if _allow_all else settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# Request logging middleware
+# -- Request logging ---------------------------------------------------------
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
-    metrics = get_metrics()
-
-    with metrics.track_api_request(request.url.path, request.method):
-        response = await call_next(request)
-
+async def _access_log(request: Request, call_next):
+    response = await call_next(request)
+    logger.info(
+        "http_request",
+        extra={
+            "path": request.url.path,
+            "method": request.method,
+            "status": response.status_code,
+        },
+    )
     return response
 
 
-# Include routers
-app.include_router(ingestion_router, prefix="/api/v1")
-app.include_router(dashboard_router)
+# -- Routers -----------------------------------------------------------------
 app.include_router(portfolio_router)
 app.include_router(accounts_router)
+app.include_router(dashboard_router)
 
 
-@app.get("/")
-async def root():
-    """Root endpoint"""
+# -- Root / meta -------------------------------------------------------------
+@app.get("/", tags=["Meta"])
+def root() -> dict[str, str]:
+    """Simple service descriptor."""
+
     return {
-        "service": "QUAN Recovery",
-        "version": "0.1.0",
+        "service": "Quannex Recovery",
+        "version": app.version,
         "status": "operational",
     }
 
 
-@app.get("/health")
-async def health():
-    """Health check endpoint"""
-    return {"status": "healthy"}
+# -- Liveness / readiness ----------------------------------------------------
+@app.get("/livez", tags=["Meta"])
+def livez() -> dict[str, str]:
+    """Liveness probe. The process is up and serving HTTP."""
+
+    return {"status": "alive"}
 
 
-@app.get("/ready")
-async def ready():
-    """Readiness check endpoint"""
-    # Check dependencies
-    checks = {
-        "database": True,  # Would check actual connection
-        "kafka": True,  # Would check Kafka connection
-        "redis": True,  # Would check Redis connection
-    }
+@app.get("/health", tags=["Meta"])
+def health() -> dict[str, str]:
+    """Backwards-compatible alias for /livez."""
 
-    all_ready = all(checks.values())
-
-    return {
-        "ready": all_ready,
-        "checks": checks,
-    }
+    return {"status": "alive"}
 
 
-@app.get("/api/v1/business-plan/download")
-async def download_business_plan():
-    """Download the QUAN business plan PDF."""
-    pdf_path = Path(__file__).resolve().parents[1] / "QUAN_Business_Plan.pdf"
+@app.get("/readyz", tags=["Meta"])
+def readyz() -> dict[str, object]:
+    """Readiness probe. Honest: reports a real database check."""
 
-    if not pdf_path.exists():
-        raise HTTPException(status_code=404, detail="Business plan not found")
+    checks: dict[str, str] = {}
+    ready = True
 
-    return FileResponse(
-        pdf_path,
-        media_type="application/pdf",
-        filename=pdf_path.name,
-    )
+    # Database: try a real round-trip.
+    db_session = SessionLocal()
+    try:
+        db_session.execute(text("SELECT 1"))
+        checks["database"] = "ok"
+    except SQLAlchemyError as exc:  # pragma: no cover - depends on env
+        logger.warning("readiness_database_failed", extra={"error": str(exc)})
+        checks["database"] = "error"
+        ready = False
+    finally:
+        db_session.close()
 
-
-# API routes for core functionality
-@app.post("/api/v1/analyze")
-async def analyze_portfolio(request: Request):
-    """Analyze portfolio with collection intelligence"""
-    from quan.intelligence import CollectionIntelligence
-
-    body = await request.json()
-    accounts = body.get("accounts", [])
-
-    engine = CollectionIntelligence()
-    analysis = engine.analyze_portfolio(accounts)
-    strategies = [engine.generate_strategy(acc) for acc in accounts]
-
-    return {
-        "analyzed": len(accounts),
-        "strategies": [
-            {
-                "account_id": s.account_id,
-                "recovery_probability": s.recovery_probability,
-                "optimal_channels": s.optimal_channels,
-                "settlement_threshold": s.settlement_threshold,
-            }
-            for s in strategies
-        ],
-        "expected_rate": analysis.get("expected_rate", 0),
-    }
+    return {"ready": ready, "checks": checks}
 
 
-@app.post("/api/v1/campaigns")
-async def create_campaign(request: Request):
-    """Create collection campaign"""
-    from quan.orchestration import CollectionOrchestrator
+@app.get("/ready", tags=["Meta"])
+def ready() -> dict[str, object]:
+    """Alias for /readyz, retained for dashboards and legacy deployments."""
 
-    body = await request.json()
-
-    orchestrator = CollectionOrchestrator()
-    campaign = await orchestrator.process_portfolio(
-        portfolio_id=body.get("portfolio_id"),
-        accounts=body.get("accounts", []),
-        client_id=body.get("client_id"),
-    )
-
-    return {
-        "campaign_id": campaign.id,
-        "status": campaign.stage.value,
-        "accounts": len(campaign.accounts),
-    }
-
-
-@app.get("/api/v1/campaigns/{campaign_id}")
-async def get_campaign(campaign_id: str):
-    """Get campaign status"""
-    from quan.orchestration import CollectionOrchestrator
-
-    orchestrator = CollectionOrchestrator()
-    status = await orchestrator.get_campaign_status(campaign_id)
-
-    if not status:
-        return {"error": "Campaign not found"}
-
-    return status
-
-
-@app.post("/api/v1/settlements")
-async def calculate_settlement(request: Request):
-    """Calculate settlement offer"""
-    from quan.payments import SettlementEngine
-    from decimal import Decimal
-
-    body = await request.json()
-    account = body.get("account", {})
-    offer = body.get("offer")
-
-    engine = SettlementEngine()
-    settlement = await engine.calculate_settlement(
-        account,
-        Decimal(str(offer)) if offer else None,
-    )
-
-    return {
-        "account_id": settlement.account_id,
-        "original_balance": float(settlement.original_balance),
-        "settlement_amount": float(settlement.settlement_amount),
-        "savings": float(settlement.savings),
-        "discount_percentage": settlement.discount_percentage,
-        "valid_until": settlement.valid_until.isoformat(),
-        "payment_options": settlement.payment_options,
-    }
-
-
-@app.post("/api/v1/payments")
-async def process_payment(request: Request):
-    """Process payment"""
-    from quan.payments import PaymentProcessor
-    from decimal import Decimal
-
-    body = await request.json()
-
-    processor = PaymentProcessor()
-    result = await processor.process_payment(
-        account=body.get("account", {}),
-        payment_method=body.get("payment_method", {}),
-        amount=Decimal(str(body.get("amount", 0))),
-    )
-
-    return {
-        "success": result.success,
-        "transaction_id": result.transaction_id,
-        "error": result.error,
-    }
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(
-        "quan.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=settings.debug,
-    )
+    return readyz()

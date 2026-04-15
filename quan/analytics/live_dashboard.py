@@ -10,7 +10,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from quan.models.database import Account, ComplianceEvent, ContactAttempt, Payment, Portfolio
+from quan.models.database import Account, ComplianceEvent, ContactAttempt, Payment
 
 PIPELINE_STAGES = [
     "ingested",
@@ -38,7 +38,6 @@ def build_full_dashboard(db: Session) -> dict[str, Any]:
         "executive": build_executive_snapshot(db),
         "operations": build_operations_snapshot(db),
         "compliance": build_compliance_snapshot(db),
-        "tokenization": build_tokenization_snapshot(db),
         "system_health": build_system_health(db),
         "alerts": build_alerts(db),
     }
@@ -242,108 +241,6 @@ def build_compliance_snapshot(db: Session) -> dict[str, Any]:
             "tcpa": {"status": "compliant" if by_type.get("consent", 0) == 0 else "review", "consent_rate": round(contact_compliance * 100, 2), "dnc_compliance": round(contact_compliance * 100, 2)},
             "regulation_f": {"status": "compliant" if by_type.get("disclosure", 0) == 0 else "review", "model_notice_usage": 100 if all_contacts else 0},
             "state_laws": {"status": "compliant" if state_counts["requires_attention"] == 0 else "review", "pending_changes": state_counts["requires_attention"]},
-        },
-    }
-
-
-def build_tokenization_snapshot(db: Session) -> dict[str, Any]:
-    """Derived tokenization-style metrics using portfolio/account groupings."""
-
-    pools = []
-    debt_groups = db.execute(
-        select(
-            Account.debt_type,
-            func.count(Account.id),
-            func.coalesce(func.sum(Account.original_balance), 0),
-            func.coalesce(func.sum(Account.balance), 0),
-            func.coalesce(func.sum(Account.total_paid), 0),
-            func.avg(Account.recovery_probability),
-        ).group_by(Account.debt_type)
-    ).all()
-
-    total_face_value = Decimal("0.00")
-    total_nav = Decimal("0.00")
-    tranches: dict[str, dict[str, Any]] = {}
-    for debt_type, count, original_sum, balance_sum, paid_sum, avg_probability in debt_groups:
-        original_value = _to_decimal(original_sum)
-        balance_value = _to_decimal(balance_sum)
-        paid_value = _to_decimal(paid_sum)
-        recovery_probability = Decimal(str(avg_probability or 0))
-        nav = balance_value * recovery_probability
-        total_face_value += original_value
-        total_nav += nav
-
-        recovery_rate = _safe_ratio(paid_value, original_value)
-        pools.append(
-            {
-                "pool_id": debt_type.upper(),
-                "asset_class": debt_type.replace("_", " ").title(),
-                "face_value": float(original_value),
-                "nav": float(nav),
-                "recovery_rate": round(recovery_rate, 4),
-                "yield": round(_safe_ratio(paid_value - nav, original_value or Decimal("1")), 4),
-                "status": "performing" if recovery_rate >= 0.15 else "watch",
-            }
-        )
-
-    portfolio_count = max(_count_all(db, Portfolio), len(pools))
-    recent_payments = _decimal_scalar(
-        db,
-        select(func.coalesce(func.sum(Payment.amount), 0)).where(
-            Payment.status == "completed",
-            Payment.recorded_at >= _now() - timedelta(days=30),
-        ),
-    )
-    avg_yield = _safe_ratio(recent_payments, total_face_value or Decimal("1"))
-
-    total_contacts = _count_all(db, ContactAttempt)
-    total_defaults = db.scalar(
-        select(func.count()).select_from(Account).where(Account.days_past_due >= 180)
-    ) or 0
-    total_accounts = _count_all(db, Account)
-
-    tranche_seed = [
-        ("senior", Decimal("0.55"), "AA"),
-        ("mezzanine", Decimal("0.25"), "BBB"),
-        ("junior", Decimal("0.15"), "BB"),
-        ("equity", Decimal("0.05"), "NR"),
-    ]
-    for tranche_name, weight, rating in tranche_seed:
-        tranche_value = total_nav * weight
-        tranches[tranche_name] = {
-            "total_value": float(tranche_value),
-            "avg_yield": round(float(avg_yield * (1 + float(weight))), 4),
-            "default_rate": round(total_defaults / max(total_accounts, 1), 4),
-            "rating": rating,
-        }
-
-    return {
-        "generated_at": _iso_now(),
-        "portfolio_summary": {
-            "total_face_value": float(total_face_value),
-            "total_nav": float(total_nav),
-            "total_pools": portfolio_count,
-            "active_tranches": len(tranches),
-            "total_investors": 0,
-            "avg_yield": round(avg_yield, 4),
-            "default_rate": round(total_defaults / max(total_accounts, 1), 4),
-        },
-        "pools": pools,
-        "tranches": tranches,
-        "investor_metrics": {
-            "total_invested": float(total_nav),
-            "distributions_ytd": float(_decimal_scalar(db, select(func.coalesce(func.sum(Payment.amount), 0)))),
-            "realized_yield_ytd": round(avg_yield, 4),
-            "investor_retention": 0.0,
-            "new_investors_30d": 0,
-            "pending_redemptions": 0,
-        },
-        "secondary_market": {
-            "volume_30d": float(recent_payments),
-            "avg_discount": 0.0,
-            "bid_ask_spread": 0.0,
-            "active_listings": 0,
-            "recent_trades": [],
         },
     }
 
@@ -651,9 +548,25 @@ def _avg_time_in_stage(db: Session, stage: str) -> str:
     rows = db.scalars(select(Account).where(Account.status == stage)).all()
     if not rows:
         return "N/A"
-    deltas = [_now() - (account.updated_at or account.created_at) for account in rows]
+    now = _now()
+    deltas = []
+    for account in rows:
+        timestamp = account.updated_at or account.created_at
+        if timestamp is None:
+            continue
+        deltas.append(now - _ensure_utc(timestamp))
+    if not deltas:
+        return "N/A"
     avg_seconds = sum(delta.total_seconds() for delta in deltas) / len(deltas)
     return _format_duration(avg_seconds)
+
+
+def _ensure_utc(value: datetime) -> datetime:
+    """Normalize naive datetimes (SQLite) to UTC-aware for comparisons."""
+
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
 
 
 def _clear_time(depth: int, processing_rate: float) -> str:

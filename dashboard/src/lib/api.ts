@@ -1,13 +1,28 @@
+/**
+ * Quannex Recovery — API client for the Next.js dashboard.
+ *
+ * Canonical type definitions for the collections OS pilot surface:
+ *   - Portfolio upload
+ *   - Account list / detail / mutation
+ *   - Dashboard (executive, operations, compliance, health, alerts, summary)
+ *
+ * The tokenization / tranche / investor / secondary-market surface that lived
+ * here previously has been removed as part of the core-product refocus.
+ */
+
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
-export interface DashboardData {
-  generated_at: string;
-  executive: ExecutiveData;
-  operations: OperationsData;
-  compliance: ComplianceData;
-  tokenization: TokenizationData;
-  system_health: SystemHealth;
-  alerts: Alert[];
+// ---------------------------------------------------------------------------
+// Dashboard payloads
+// ---------------------------------------------------------------------------
+
+export interface KPIValue {
+  value: number;
+  unit: string;
+  change: {
+    value: number;
+    direction: string;
+  };
 }
 
 export interface ExecutiveData {
@@ -26,24 +41,6 @@ export interface ExecutiveData {
     recovery_rate: [string, number][];
   };
   alerts: Alert[];
-}
-
-export interface KPIValue {
-  value: number;
-  unit: string;
-  change: {
-    value: number;
-    direction: string;
-  };
-}
-
-export interface OperationsData {
-  generated_at: string;
-  pipeline: Record<string, PipelineStage>;
-  channels: Record<string, ChannelMetrics>;
-  queues: Record<string, QueueStatus>;
-  bottlenecks: Bottleneck[];
-  throughput: ThroughputMetrics;
 }
 
 export interface PipelineStage {
@@ -82,6 +79,39 @@ export interface ThroughputMetrics {
   current_capacity_utilization: number;
 }
 
+export interface OperationsData {
+  generated_at: string;
+  pipeline: Record<string, PipelineStage>;
+  channels: Record<string, ChannelMetrics>;
+  queues: Record<string, QueueStatus>;
+  bottlenecks: Bottleneck[];
+  throughput: ThroughputMetrics;
+}
+
+export interface Violation {
+  id: string;
+  date: string;
+  type: string;
+  description: string;
+  severity: string;
+  resolution: string;
+}
+
+export interface StateCompliance {
+  status: string;
+  license_expiry?: string;
+  note?: string;
+}
+
+export interface RegulationStatus {
+  status: string;
+  automation_coverage?: number;
+  consent_rate?: number;
+  dnc_compliance?: number;
+  model_notice_usage?: number;
+  pending_changes?: number;
+}
+
 export interface ComplianceData {
   generated_at: string;
   overall_score: {
@@ -113,92 +143,6 @@ export interface ComplianceData {
   regulation_status: Record<string, RegulationStatus>;
 }
 
-export interface Violation {
-  id: string;
-  date: string;
-  type: string;
-  description: string;
-  severity: string;
-  resolution: string;
-}
-
-export interface StateCompliance {
-  status: string;
-  license_expiry?: string;
-  note?: string;
-}
-
-export interface RegulationStatus {
-  status: string;
-  last_review?: string;
-  automation_coverage?: number;
-  consent_rate?: number;
-  dnc_compliance?: number;
-  "7_in_7_compliance"?: number;
-  model_notice_usage?: number;
-  pending_changes?: number;
-}
-
-export interface TokenizationData {
-  generated_at: string;
-  portfolio_summary: PortfolioSummary;
-  pools: Pool[];
-  tranches: Record<string, TrancheData>;
-  investor_metrics: InvestorMetrics;
-  secondary_market: SecondaryMarket;
-}
-
-export interface PortfolioSummary {
-  total_face_value: number;
-  total_nav: number;
-  total_pools: number;
-  active_tranches: number;
-  total_investors: number;
-  avg_yield: number;
-  default_rate: number;
-}
-
-export interface Pool {
-  pool_id: string;
-  asset_class: string;
-  face_value: number;
-  nav: number;
-  recovery_rate: number;
-  yield: number;
-  status: string;
-}
-
-export interface TrancheData {
-  total_value: number;
-  avg_yield: number;
-  default_rate: number;
-  rating: string;
-}
-
-export interface InvestorMetrics {
-  total_invested: number;
-  distributions_ytd: number;
-  realized_yield_ytd: number;
-  investor_retention: number;
-  new_investors_30d: number;
-  pending_redemptions: number;
-}
-
-export interface SecondaryMarket {
-  volume_30d: number;
-  avg_discount: number;
-  bid_ask_spread: number;
-  active_listings: number;
-  recent_trades: Trade[];
-}
-
-export interface Trade {
-  date: string;
-  tranche: string;
-  amount: number;
-  price: number;
-}
-
 export interface SystemHealth {
   status: string;
   uptime: string;
@@ -215,12 +159,20 @@ export interface Alert {
   recommendation?: string;
 }
 
+export interface DashboardData {
+  generated_at: string;
+  executive: ExecutiveData;
+  operations: OperationsData;
+  compliance: ComplianceData;
+  system_health: SystemHealth;
+  alerts: Alert[];
+}
+
 export interface SummaryStats {
   generated_at: string;
   executive: {
     total_revenue: number;
     recovery_rate: number;
-    roi: number;
     cost_per_dollar: number;
   };
   operations: {
@@ -233,13 +185,12 @@ export interface SummaryStats {
     violations_30d: number;
     audit_readiness: number;
   };
-  tokenization: {
-    total_nav: number;
-    avg_yield: number;
-    active_pools: number;
-  };
   alert_count: number;
 }
+
+// ---------------------------------------------------------------------------
+// Accounts
+// ---------------------------------------------------------------------------
 
 export interface AccountSummary {
   account_id: string;
@@ -309,6 +260,19 @@ export interface AccountsResponse {
   items: AccountSummary[];
 }
 
+export interface AccountsQuery {
+  page?: number;
+  page_size?: number;
+  status?: string;
+  debt_type?: string;
+  state?: string;
+  search?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Portfolio upload
+// ---------------------------------------------------------------------------
+
 export interface PortfolioUploadRowError {
   row_number: number;
   account_id?: string | null;
@@ -337,14 +301,9 @@ export interface PortfolioUploadResult {
   accounts: UploadedAccountSummary[];
 }
 
-export interface AccountsQuery {
-  page?: number;
-  page_size?: number;
-  status?: string;
-  debt_type?: string;
-  state?: string;
-  search?: string;
-}
+// ---------------------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------------------
 
 function apiUrl(path: string): string {
   return `${API_BASE}${path}`;
@@ -366,10 +325,14 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (!response.ok) {
-    throw new Error(await response.text() || `Request failed: ${response.status}`);
+    throw new Error((await response.text()) || `Request failed: ${response.status}`);
   }
   return response.json() as Promise<T>;
 }
+
+// ---------------------------------------------------------------------------
+// Empty-state factories (used when the dashboard first loads or the DB is empty)
+// ---------------------------------------------------------------------------
 
 export function createEmptyExecutiveData(): ExecutiveData {
   return {
@@ -458,38 +421,6 @@ export function createEmptyComplianceData(): ComplianceData {
   };
 }
 
-export function createEmptyTokenizationData(): TokenizationData {
-  return {
-    generated_at: new Date().toISOString(),
-    portfolio_summary: {
-      total_face_value: 0,
-      total_nav: 0,
-      total_pools: 0,
-      active_tranches: 0,
-      total_investors: 0,
-      avg_yield: 0,
-      default_rate: 0,
-    },
-    pools: [],
-    tranches: {},
-    investor_metrics: {
-      total_invested: 0,
-      distributions_ytd: 0,
-      realized_yield_ytd: 0,
-      investor_retention: 0,
-      new_investors_30d: 0,
-      pending_redemptions: 0,
-    },
-    secondary_market: {
-      volume_30d: 0,
-      avg_discount: 0,
-      bid_ask_spread: 0,
-      active_listings: 0,
-      recent_trades: [],
-    },
-  };
-}
-
 export function createEmptyHealth(): { system_health: SystemHealth; alerts: Alert[] } {
   return {
     system_health: {
@@ -516,11 +447,14 @@ export function createEmptyDashboard(): DashboardData {
     executive: createEmptyExecutiveData(),
     operations: createEmptyOperationsData(),
     compliance: createEmptyComplianceData(),
-    tokenization: createEmptyTokenizationData(),
     system_health: createEmptyHealth().system_health,
     alerts: [],
   };
 }
+
+// ---------------------------------------------------------------------------
+// Fetchers
+// ---------------------------------------------------------------------------
 
 export async function fetchDashboard(): Promise<DashboardData> {
   return fetchJson<DashboardData>("/api/v1/dashboard/");
@@ -536,10 +470,6 @@ export async function fetchOperations(): Promise<OperationsData> {
 
 export async function fetchCompliance(): Promise<ComplianceData> {
   return fetchJson<ComplianceData>("/api/v1/dashboard/compliance");
-}
-
-export async function fetchTokenization(): Promise<TokenizationData> {
-  return fetchJson<TokenizationData>("/api/v1/dashboard/tokenization");
 }
 
 export async function fetchSummary(): Promise<SummaryStats> {
@@ -565,7 +495,11 @@ export async function fetchAccount(accountId: string): Promise<AccountDetail> {
   return fetchJson<AccountDetail>(`/api/v1/accounts/${accountId}`);
 }
 
-export async function updateAccountStatus(accountId: string, status: string, notes?: string) {
+export async function updateAccountStatus(
+  accountId: string,
+  status: string,
+  notes?: string
+): Promise<AccountSummary> {
   return fetchJson<AccountSummary>(`/api/v1/accounts/${accountId}/status`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -575,8 +509,14 @@ export async function updateAccountStatus(accountId: string, status: string, not
 
 export async function logAccountContact(
   accountId: string,
-  payload: { channel: string; outcome: string; compliant?: boolean; notes?: string; agent_name?: string }
-) {
+  payload: {
+    channel: string;
+    outcome: string;
+    compliant?: boolean;
+    notes?: string;
+    agent_name?: string;
+  }
+): Promise<ContactHistoryEntry> {
   return fetchJson<ContactHistoryEntry>(`/api/v1/accounts/${accountId}/contact`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -586,8 +526,14 @@ export async function logAccountContact(
 
 export async function recordAccountPayment(
   accountId: string,
-  payload: { amount: number; method: string; status?: string; reference?: string; notes?: string }
-) {
+  payload: {
+    amount: number;
+    method: string;
+    status?: string;
+    reference?: string;
+    notes?: string;
+  }
+): Promise<PaymentHistoryEntry> {
   return fetchJson<PaymentHistoryEntry>(`/api/v1/accounts/${accountId}/payment`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -603,314 +549,7 @@ export async function uploadPortfolio(file: File): Promise<PortfolioUploadResult
     body: formData,
   });
   if (!response.ok) {
-    throw new Error(await response.text() || "Upload failed");
+    throw new Error((await response.text()) || "Upload failed");
   }
-  return response.json() as Promise<PortfolioUploadResult>;
-}
-
-// ==================== Account Types ====================
-
-export interface AccountListItem {
-  id: string;
-  external_account_id: string | null;
-  debtor_name: string;
-  current_balance: number;
-  original_balance: number;
-  debt_type: string;
-  status: string;
-  state: string | null;
-  days_past_due: number;
-  recovery_probability: number | null;
-  contact_attempts: number;
-  last_contact_date: string | null;
-  created_at: string;
-}
-
-export interface AccountListResponse {
-  accounts: AccountListItem[];
-  total: number;
-  page: number;
-  page_size: number;
-  total_balance: number;
-}
-
-export interface AccountStats {
-  total_accounts: number;
-  total_balance: number;
-  avg_balance: number;
-  avg_recovery_probability: number;
-  avg_days_past_due: number;
-  by_status: Record<string, number>;
-  by_debt_type: Record<string, number>;
-  by_state: Record<string, number>;
-}
-
-export interface ContactAttemptDetail {
-  id: string;
-  channel: string;
-  direction: string;
-  outcome: string;
-  duration_seconds: number | null;
-  response_received: boolean;
-  cost: number;
-  created_at: string;
-}
-
-export interface PaymentDetail {
-  id: string;
-  amount: number;
-  payment_method: string;
-  status: string;
-  is_settlement: boolean;
-  is_payment_plan: boolean;
-  processed_at: string | null;
-  created_at: string;
-}
-
-export interface ComplianceEventDetail {
-  id: string;
-  event_type: string;
-  severity: string;
-  description: string;
-  resolution: string | null;
-  regulation: string | null;
-  created_at: string;
-}
-
-export interface AccountDetail {
-  id: string;
-  external_account_id: string | null;
-  portfolio_id: string | null;
-  debtor_name: string;
-  debtor_first_name: string | null;
-  debtor_last_name: string | null;
-  phone: string | null;
-  phone_valid: boolean;
-  email: string | null;
-  email_valid: boolean;
-  address_line1: string | null;
-  address_line2: string | null;
-  city: string | null;
-  state: string | null;
-  zip_code: string | null;
-  original_creditor: string | null;
-  current_creditor: string | null;
-  debt_type: string;
-  original_balance: number;
-  current_balance: number;
-  days_past_due: number;
-  status: string;
-  status_changed_at: string;
-  recovery_probability: number | null;
-  settlement_threshold: number | null;
-  optimal_channels: string[] | null;
-  do_not_call: boolean;
-  do_not_email: boolean;
-  bankruptcy_flag: boolean;
-  disputed: boolean;
-  total_payments: number;
-  contact_attempts: number;
-  successful_contacts: number;
-  last_contact_date: string | null;
-  contact_history: ContactAttemptDetail[];
-  payment_history: PaymentDetail[];
-  compliance_events: ComplianceEventDetail[];
-  created_at: string;
-  updated_at: string;
-}
-
-// ==================== Portfolio Types ====================
-
-export interface PortfolioResponse {
-  id: string;
-  name: string;
-  client_id: string | null;
-  total_accounts: number;
-  total_balance: number;
-  upload_status: string;
-  valid_rows: number;
-  invalid_rows: number;
-  created_at: string;
-}
-
-export interface PortfolioListResponse {
-  portfolios: PortfolioResponse[];
-  total: number;
-  page: number;
-  page_size: number;
-}
-
-export interface ValidationError {
-  row: number;
-  field: string;
-  error: string;
-  value: string | null;
-}
-
-export interface UploadSummary {
-  portfolio_id: string;
-  portfolio_name: string;
-  total_rows: number;
-  valid_rows: number;
-  invalid_rows: number;
-  total_balance: number;
-  accounts_by_status: Record<string, number>;
-  accounts_by_debt_type: Record<string, number>;
-  errors: ValidationError[];
-}
-
-// ==================== Account API Functions ====================
-
-export interface AccountFilters {
-  page?: number;
-  page_size?: number;
-  status?: string;
-  debt_type?: string;
-  state?: string;
-  min_balance?: number;
-  max_balance?: number;
-  search?: string;
-  sort_by?: string;
-  sort_order?: string;
-}
-
-export async function fetchAccounts(
-  filters: AccountFilters = {}
-): Promise<AccountListResponse> {
-  const params = new URLSearchParams();
-  if (filters.page) params.set("page", filters.page.toString());
-  if (filters.page_size) params.set("page_size", filters.page_size.toString());
-  if (filters.status) params.set("status", filters.status);
-  if (filters.debt_type) params.set("debt_type", filters.debt_type);
-  if (filters.state) params.set("state", filters.state);
-  if (filters.min_balance) params.set("min_balance", filters.min_balance.toString());
-  if (filters.max_balance) params.set("max_balance", filters.max_balance.toString());
-  if (filters.search) params.set("search", filters.search);
-  if (filters.sort_by) params.set("sort_by", filters.sort_by);
-  if (filters.sort_order) params.set("sort_order", filters.sort_order);
-
-  const res = await fetch(`${API_BASE}/api/v1/accounts?${params.toString()}`);
-  if (!res.ok) throw new Error("Failed to fetch accounts");
-  return res.json();
-}
-
-export async function fetchAccountStats(): Promise<AccountStats> {
-  const res = await fetch(`${API_BASE}/api/v1/accounts/stats`);
-  if (!res.ok) throw new Error("Failed to fetch account stats");
-  return res.json();
-}
-
-export async function fetchAccount(id: string): Promise<AccountDetail> {
-  const res = await fetch(`${API_BASE}/api/v1/accounts/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch account");
-  return res.json();
-}
-
-export async function updateAccountStatus(
-  id: string,
-  status: string,
-  notes?: string
-): Promise<{ account_id: string; old_status: string; new_status: string }> {
-  const res = await fetch(`${API_BASE}/api/v1/accounts/${id}/status`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status, notes }),
-  });
-  if (!res.ok) throw new Error("Failed to update account status");
-  return res.json();
-}
-
-export async function logContactAttempt(
-  id: string,
-  data: {
-    channel: string;
-    direction?: string;
-    outcome: string;
-    contact_target?: string;
-    duration_seconds?: number;
-    message_content?: string;
-    response_content?: string;
-    cost?: number;
-  }
-): Promise<{ contact_id: string; account_id: string }> {
-  const res = await fetch(`${API_BASE}/api/v1/accounts/${id}/contact`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Failed to log contact attempt");
-  return res.json();
-}
-
-export async function recordPayment(
-  id: string,
-  data: {
-    amount: number;
-    payment_method: string;
-    is_settlement?: boolean;
-    is_payment_plan?: boolean;
-    payment_plan_installment?: number;
-    transaction_id?: string;
-  }
-): Promise<{ payment_id: string; account_id: string; new_balance: number }> {
-  const res = await fetch(`${API_BASE}/api/v1/accounts/${id}/payment`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Failed to record payment");
-  return res.json();
-}
-
-// ==================== Portfolio API Functions ====================
-
-export async function fetchPortfolios(
-  page: number = 1,
-  page_size: number = 20
-): Promise<PortfolioListResponse> {
-  const res = await fetch(
-    `${API_BASE}/api/v1/portfolios?page=${page}&page_size=${page_size}`
-  );
-  if (!res.ok) throw new Error("Failed to fetch portfolios");
-  return res.json();
-}
-
-export async function fetchPortfolio(id: string): Promise<PortfolioResponse> {
-  const res = await fetch(`${API_BASE}/api/v1/portfolios/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch portfolio");
-  return res.json();
-}
-
-export async function uploadPortfolio(
-  file: File,
-  portfolioName?: string,
-  clientId?: string
-): Promise<UploadSummary> {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const params = new URLSearchParams();
-  if (portfolioName) params.set("portfolio_name", portfolioName);
-  if (clientId) params.set("client_id", clientId);
-
-  const url = `${API_BASE}/api/v1/portfolios/upload${params.toString() ? "?" + params.toString() : ""}`;
-
-  const res = await fetch(url, {
-    method: "POST",
-    body: formData,
-  });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ detail: "Upload failed" }));
-    throw new Error(error.detail || "Failed to upload portfolio");
-  }
-
-  return res.json();
-}
-
-export async function deletePortfolio(id: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/v1/portfolios/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Failed to delete portfolio");
+  return (await response.json()) as PortfolioUploadResult;
 }

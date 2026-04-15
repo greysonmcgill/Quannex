@@ -8,7 +8,6 @@ import {
   TrendingUp,
   Settings2,
   Shield,
-  Coins,
   Activity,
   Bell,
   HelpCircle,
@@ -18,12 +17,11 @@ import {
 
 const navigation = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
-  { name: "Executive", href: "/executive", icon: TrendingUp },
+  { name: "Accounts", href: "/accounts", icon: Users },
+  { name: "Upload", href: "/upload", icon: FolderUp },
   { name: "Operations", href: "/operations", icon: Settings2 },
   { name: "Compliance", href: "/compliance", icon: Shield },
-  { name: "Tokenization", href: "/tokenization", icon: Coins },
-  { name: "Upload", href: "/upload", icon: FolderUp },
-  { name: "Accounts", href: "/accounts", icon: Users },
+  { name: "Executive", href: "/executive", icon: TrendingUp },
 ];
 
 const secondaryNav = [
@@ -43,8 +41,8 @@ export function Sidebar() {
             <span className="text-primary-foreground font-bold text-lg">Q</span>
           </div>
           <div>
-            <h1 className="font-bold text-lg">QUAN</h1>
-            <p className="text-xs text-muted-foreground">Recovery Dashboard</p>
+            <h1 className="font-bold text-lg">Quannex</h1>
+            <p className="text-xs text-muted-foreground">Collections OS</p>
           </div>
         </div>
 
@@ -108,7 +106,7 @@ export function Sidebar() {
           </div>
           <div className="px-3 mt-2">
             <p className="text-xs text-muted-foreground">
-              QUAN Recovery v0.1.0
+              Quannex Recovery v0.1.0
             </p>
           </div>
         </div>

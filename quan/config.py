@@ -1,68 +1,84 @@
-"""Central configuration management for QUAN platform"""
+"""Runtime configuration for Quannex Recovery.
 
-from pydantic_settings import BaseSettings
+Environment-driven. Loads from ``.env`` during development and from real
+environment variables in production. Keep this narrow: every setting here
+must be consumed by runtime code in the pilot.
+"""
+
+from __future__ import annotations
+
 from functools import lru_cache
-from typing import Optional
+from typing import List, Optional
+
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application settings loaded from environment variables"""
+    """Application settings loaded from environment variables."""
 
-    # Application
-    app_name: str = "QUAN Recovery"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    # -- Application ---------------------------------------------------------
+    app_name: str = "Quannex Recovery"
     environment: str = "development"
     debug: bool = False
 
-    # Database
+    # -- Database ------------------------------------------------------------
     database_url: str = "sqlite:///./quan.db"
-    redis_url: str = "redis://localhost:6379"
 
-    # Kafka
-    kafka_bootstrap_servers: str = "localhost:9092"
-    kafka_consumer_group: str = "quan-consumers"
+    # -- HTTP CORS (used when not in development mode) ----------------------
+    allowed_origins: List[str] = Field(
+        default_factory=lambda: [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ]
+    )
 
-    # External Services
-    twilio_account_sid: Optional[str] = None
-    twilio_auth_token: Optional[str] = None
-    twilio_phone_number: Optional[str] = None
-
-    sendgrid_api_key: Optional[str] = None
-    sendgrid_from_email: str = "collections@quanrecovery.com"
-
-    stripe_secret_key: Optional[str] = None
-    stripe_webhook_secret: Optional[str] = None
-
-    # Google Cloud
-    gcp_project_id: Optional[str] = None
-    gcs_bucket: str = "quan-data"
-    bigquery_dataset: str = "quan_analytics"
-
-    # ML Models
-    model_registry_path: str = "/models"
-    intelligence_engine_url: str = "localhost:50051"
-
-    # Compliance
+    # -- Compliance policy (referenced by compliance engine and UI) ---------
     max_weekly_contact_attempts: int = 7
     contact_hours_start: int = 8
     contact_hours_end: int = 21
 
-    # Security
-    secret_key: str = "change-me-in-production"
+    # -- Security ------------------------------------------------------------
+    #
+    # ``secret_key`` does not ship with a production-safe default. Deployments
+    # must set ``SECRET_KEY`` explicitly; otherwise the validator below makes
+    # it obvious that the pilot has not been configured.
+    secret_key: Optional[str] = None
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
-    # Monitoring
-    prometheus_port: int = 9090
-    jaeger_endpoint: Optional[str] = None
+    # -- Optional integrations (resolved lazily where used) -----------------
+    stripe_secret_key: Optional[str] = None
+    stripe_webhook_secret: Optional[str] = None
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def _split_origins(cls, value):
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
+
+    @field_validator("secret_key")
+    @classmethod
+    def _secret_key_required_in_prod(cls, value: Optional[str], info) -> Optional[str]:
+        env = (info.data.get("environment") or "development").lower()
+        if env not in {"development", "dev", "local", "test"} and not value:
+            raise ValueError(
+                "SECRET_KEY must be set outside of development environments."
+            )
+        return value
 
 
 @lru_cache
 def get_settings() -> Settings:
-    """Get cached settings instance"""
+    """Cached Settings instance."""
+
     return Settings()
 
 
