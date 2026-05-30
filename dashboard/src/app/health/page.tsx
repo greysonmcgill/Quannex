@@ -1,47 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { AlertList } from "@/components/dashboard/alert-list";
 import { SystemHealthComponent } from "@/components/dashboard/system-health";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createEmptyHealth, fetchHealth, getApiBase, SystemHealth, Alert } from "@/lib/api";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { createEmptyHealth, fetchHealth, getApiBase } from "@/lib/api";
 import { Activity, Server } from "lucide-react";
 
-interface HealthData {
-  system_health: SystemHealth;
-  alerts: Alert[];
-}
-
 export default function HealthPage() {
-  const [data, setData] = useState<HealthData>(createEmptyHealth());
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = useCallback(async () => {
-    try {
-      setError(null);
-      setData(await fetchHealth());
-    } catch (err) {
-      setData(createEmptyHealth());
-      setError(err instanceof Error ? err.message : "Unable to load health data");
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const { data, isLoading, isRefreshing, error, refresh } = useDashboardData(
+    fetchHealth,
+    createEmptyHealth
+  );
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -50,21 +26,16 @@ export default function HealthPage() {
         title="System Health"
         alertCount={data.alerts.length}
         lastUpdated={new Date().toLocaleString()}
-        onRefresh={() => {
-          setIsRefreshing(true);
-          loadData();
-        }}
+        onRefresh={refresh}
         isRefreshing={isRefreshing}
       />
 
       <div className="p-6 space-y-6">
         {error && (
-          <Card className="border-yellow-500/30 bg-yellow-500/5">
-            <CardContent className="p-4 text-sm text-yellow-700 dark:text-yellow-400">
-              Health data is unavailable right now, so this page is showing the zero-account empty
-              state. {error}
-            </CardContent>
-          </Card>
+          <ErrorAlert
+            message="Health data is unavailable right now, so this page is showing the zero-account empty state."
+            details={error}
+          />
         )}
 
         <Card>

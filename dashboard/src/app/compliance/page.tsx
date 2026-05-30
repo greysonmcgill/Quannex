@@ -1,45 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { ComplianceGauge } from "@/components/dashboard/compliance-gauge";
 import { KPICard } from "@/components/dashboard/kpi-card";
 import { ViolationsTable } from "@/components/dashboard/violations-table";
 import { Header } from "@/components/layout/header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Progress } from "@/components/ui/progress";
-import { createEmptyComplianceData, ComplianceData, fetchCompliance } from "@/lib/api";
-import { FileCheck, MapPin, Shield, TriangleAlert } from "lucide-react";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { createEmptyComplianceData, fetchCompliance } from "@/lib/api";
+import { FileCheck, MapPin, Shield, AlertTriangle } from "lucide-react";
 
 export default function CompliancePage() {
-  const [data, setData] = useState<ComplianceData>(createEmptyComplianceData());
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = useCallback(async () => {
-    try {
-      setError(null);
-      setData(await fetchCompliance());
-    } catch (err) {
-      setData(createEmptyComplianceData());
-      setError(err instanceof Error ? err.message : "Unable to load compliance dashboard");
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const { data, isLoading, isRefreshing, error, refresh } = useDashboardData(
+    fetchCompliance,
+    createEmptyComplianceData
+  );
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -48,27 +29,22 @@ export default function CompliancePage() {
         title="Compliance Dashboard"
         alertCount={data.violations.total_30d}
         lastUpdated={new Date(data.generated_at).toLocaleString()}
-        onRefresh={() => {
-          setIsRefreshing(true);
-          loadData();
-        }}
+        onRefresh={refresh}
         isRefreshing={isRefreshing}
       />
 
       <div className="p-6 space-y-6">
         {error && (
-          <Card className="border-yellow-500/30 bg-yellow-500/5">
-            <CardContent className="p-4 text-sm text-yellow-700 dark:text-yellow-400">
-              Compliance data is currently unavailable, so this page is showing an empty state.
-              {` ${error}`}
-            </CardContent>
-          </Card>
+          <ErrorAlert
+            message="Compliance data is currently unavailable, so this page is showing an empty state."
+            details={error}
+          />
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <KPICard title="Overall Compliance" value={`${data.overall_score.score.toFixed(1)}%`} icon={<Shield className="h-4 w-4" />} description={data.overall_score.rating} />
           <KPICard title="Audit Readiness" value={`${data.audit_readiness.score.toFixed(1)}%`} icon={<FileCheck className="h-4 w-4" />} description={data.audit_readiness.overall_readiness} />
-          <KPICard title="Violations (30d)" value={data.violations.total_30d.toString()} icon={<TriangleAlert className="h-4 w-4" />} />
+          <KPICard title="Violations (30d)" value={data.violations.total_30d.toString()} icon={<AlertTriangle className="h-4 w-4" />} />
           <KPICard title="States Compliant" value={`${data.state_compliance.fully_compliant}`} icon={<MapPin className="h-4 w-4" />} description={`${data.state_compliance.requires_attention} need review`} />
         </div>
 

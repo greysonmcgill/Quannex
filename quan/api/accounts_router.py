@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -14,25 +13,9 @@ from sqlalchemy.orm import Session, joinedload
 
 from quan.database import get_db
 from quan.models.database import Account, ComplianceEvent, ContactAttempt, Payment
+from quan.utils import CONTACT_COSTS, get_account_or_404, to_iso, utc_now
 
 router = APIRouter(prefix="/api/v1/accounts", tags=["Accounts"])
-
-VALID_STATUSES = {
-    "ingested",
-    "enriched",
-    "scored",
-    "contacted",
-    "negotiating",
-    "payment_pending",
-    "resolved",
-}
-CONTACT_COSTS = {
-    "sms": Decimal("0.02"),
-    "email": Decimal("0.01"),
-    "voice": Decimal("0.15"),
-    "digital": Decimal("0.03"),
-    "mail": Decimal("0.55"),
-}
 
 
 class ContactAttemptCreate(BaseModel):
@@ -74,10 +57,10 @@ def _account_summary(account: Account) -> dict[str, Any]:
         "settlement_threshold": account.settlement_threshold,
         "total_paid": float(account.total_paid),
         "total_contact_attempts": account.total_contact_attempts,
-        "last_contact_at": _iso(account.last_contact_at),
-        "last_payment_at": _iso(account.last_payment_at),
-        "created_at": _iso(account.created_at),
-        "updated_at": _iso(account.updated_at),
+        "last_contact_at": to_iso(account.last_contact_at),
+        "last_payment_at": to_iso(account.last_payment_at),
+        "created_at": to_iso(account.created_at),
+        "updated_at": to_iso(account.updated_at),
     }
 
 
@@ -155,7 +138,7 @@ def get_account_detail(account_id: str, db: Session = Depends(get_db)) -> dict[s
                 "cost": float(attempt.cost),
                 "agent_name": attempt.agent_name,
                 "notes": attempt.notes,
-                "attempted_at": _iso(attempt.attempted_at),
+                "attempted_at": to_iso(attempt.attempted_at),
             }
             for attempt in account.contact_attempts
         ],
@@ -167,7 +150,7 @@ def get_account_detail(account_id: str, db: Session = Depends(get_db)) -> dict[s
                 "status": payment.status,
                 "reference": payment.reference,
                 "notes": payment.notes,
-                "recorded_at": _iso(payment.recorded_at),
+                "recorded_at": to_iso(payment.recorded_at),
             }
             for payment in account.payments
         ],
@@ -179,7 +162,7 @@ def get_account_detail(account_id: str, db: Session = Depends(get_db)) -> dict[s
                 "message": event.message,
                 "resolution": event.resolution,
                 "resolved": event.resolved,
-                "occurred_at": _iso(event.occurred_at),
+                "occurred_at": to_iso(event.occurred_at),
             }
             for event in account.compliance_events
         ],
@@ -194,12 +177,10 @@ def update_account_status(
 ) -> dict[str, Any]:
     """Update the current pipeline status for an account."""
 
-    account = db.query(Account).filter(Account.account_id == account_id).first()
-    if not account:
-        raise HTTPException(status_code=404, detail="Account not found")
+    account = get_account_or_404(db, account_id)
 
     account.status = payload.status
-    account.updated_at = _now()
+    account.updated_at = utc_now()
     if payload.notes:
         db.add(
             ComplianceEvent(
@@ -226,9 +207,7 @@ def log_contact_attempt(
 ) -> dict[str, Any]:
     """Log a contact attempt and update account rollups."""
 
-    account = db.query(Account).filter(Account.account_id == account_id).first()
-    if not account:
-        raise HTTPException(status_code=404, detail="Account not found")
+    account = get_account_or_404(db, account_id)
 
     cost = CONTACT_COSTS[payload.channel]
     attempt = ContactAttempt(
@@ -244,7 +223,7 @@ def log_contact_attempt(
     db.add(attempt)
 
     account.total_contact_attempts += 1
-    account.last_contact_at = _now()
+    account.last_contact_at = utc_now()
     if account.status in {"scored", "enriched", "ingested"}:
         account.status = "contacted"
 
@@ -274,7 +253,7 @@ def log_contact_attempt(
         "outcome": attempt.outcome,
         "compliant": attempt.compliant,
         "cost": float(attempt.cost),
-        "attempted_at": _iso(attempt.attempted_at),
+        "attempted_at": to_iso(attempt.attempted_at),
     }
 
 
@@ -286,9 +265,7 @@ def record_payment(
 ) -> dict[str, Any]:
     """Record a payment against an account."""
 
-    account = db.query(Account).filter(Account.account_id == account_id).first()
-    if not account:
-        raise HTTPException(status_code=404, detail="Account not found")
+    account = get_account_or_404(db, account_id)
 
     payment = Payment(
         payment_id=str(uuid.uuid4()),
@@ -304,7 +281,7 @@ def record_payment(
     if payload.status == "completed":
         account.total_paid = (account.total_paid or Decimal("0.00")) + payload.amount
         account.balance = max(Decimal("0.00"), account.balance - payload.amount)
-        account.last_payment_at = _now()
+        account.last_payment_at = utc_now()
         account.status = "resolved" if account.balance <= Decimal("0.00") else "payment_pending"
     elif payload.status == "pending":
         account.status = "payment_pending"
@@ -320,17 +297,5 @@ def record_payment(
         "method": payment.method,
         "status": payment.status,
         "balance": float(account.balance),
-        "recorded_at": _iso(payment.recorded_at),
+        "recorded_at": to_iso(payment.recorded_at),
     }
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc)
-
-
-def _iso(value: datetime | None) -> str | None:
-    if value is None:
-        return None
-    if value.tzinfo is None:
-        value = value.replace(tzinfo=timezone.utc)
-    return value.isoformat()

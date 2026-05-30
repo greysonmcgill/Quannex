@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
 import { AlertList } from "@/components/dashboard/alert-list";
 import { ChannelMetricsComponent } from "@/components/dashboard/channel-metrics";
 import { KPICard } from "@/components/dashboard/kpi-card";
@@ -10,7 +9,10 @@ import { SystemHealthComponent } from "@/components/dashboard/system-health";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createEmptyDashboard, DashboardData, fetchDashboard } from "@/lib/api";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { createEmptyDashboard, fetchDashboard } from "@/lib/api";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/utils";
 import {
   Activity,
@@ -22,37 +24,15 @@ import {
 } from "lucide-react";
 
 export default function OverviewPage() {
-  const [data, setData] = useState<DashboardData>(createEmptyDashboard());
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = useCallback(async () => {
-    try {
-      setError(null);
-      const result = await fetchDashboard();
-      setData(result);
-    } catch (err) {
-      setData(createEmptyDashboard());
-      setError(err instanceof Error ? err.message : "Unable to load dashboard");
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const { data, isLoading, isRefreshing, error, refresh } = useDashboardData(
+    fetchDashboard,
+    createEmptyDashboard
+  );
 
   const activeAccounts = data.operations.pipeline.ingested?.count || 0;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -61,20 +41,16 @@ export default function OverviewPage() {
         title="Dashboard Overview"
         alertCount={data.alerts.length}
         lastUpdated={new Date(data.generated_at).toLocaleString()}
-        onRefresh={() => {
-          setIsRefreshing(true);
-          loadData();
-        }}
+        onRefresh={refresh}
         isRefreshing={isRefreshing}
       />
 
       <div className="p-6 space-y-6">
         {error && (
-          <Card className="border-yellow-500/30 bg-yellow-500/5">
-            <CardContent className="p-4 text-sm text-yellow-700 dark:text-yellow-400">
-              Showing an empty-state dashboard because the backend could not be reached. {error}
-            </CardContent>
-          </Card>
+          <ErrorAlert
+            message="Showing an empty-state dashboard because the backend could not be reached."
+            details={error}
+          />
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -183,7 +159,7 @@ export default function OverviewPage() {
                 honest zero-state metrics instead of demo values.
               </p>
               <div className="mt-4">
-                <Button variant="outline" size="sm" onClick={loadData}>
+                <Button variant="outline" size="sm" onClick={refresh}>
                   Refresh Data
                 </Button>
               </div>

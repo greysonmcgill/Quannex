@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { AlertList } from "@/components/dashboard/alert-list";
 import { ChannelMetricsComponent } from "@/components/dashboard/channel-metrics";
 import { KPICard } from "@/components/dashboard/kpi-card";
@@ -8,39 +7,21 @@ import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
 import { QueueStatusComponent } from "@/components/dashboard/queue-status";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createEmptyOperationsData, fetchOperations, OperationsData } from "@/lib/api";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { createEmptyOperationsData, fetchOperations } from "@/lib/api";
 import { formatNumber, formatPercent } from "@/lib/utils";
 import { Activity, CheckCircle2, Layers, MessageSquare, Users } from "lucide-react";
 
 export default function OperationsPage() {
-  const [data, setData] = useState<OperationsData>(createEmptyOperationsData());
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = useCallback(async () => {
-    try {
-      setError(null);
-      setData(await fetchOperations());
-    } catch (err) {
-      setData(createEmptyOperationsData());
-      setError(err instanceof Error ? err.message : "Unable to load operations dashboard");
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const { data, isLoading, isRefreshing, error, refresh } = useDashboardData(
+    fetchOperations,
+    createEmptyOperationsData
+  );
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   const totalAccounts = data.pipeline.ingested?.count || 0;
@@ -57,21 +38,16 @@ export default function OperationsPage() {
         title="Operations Dashboard"
         alertCount={bottleneckAlerts.length}
         lastUpdated={new Date(data.generated_at).toLocaleString()}
-        onRefresh={() => {
-          setIsRefreshing(true);
-          loadData();
-        }}
+        onRefresh={refresh}
         isRefreshing={isRefreshing}
       />
 
       <div className="p-6 space-y-6">
         {error && (
-          <Card className="border-yellow-500/30 bg-yellow-500/5">
-            <CardContent className="p-4 text-sm text-yellow-700 dark:text-yellow-400">
-              The operations dashboard is showing empty-state data because the API request failed.
-              {` ${error}`}
-            </CardContent>
-          </Card>
+          <ErrorAlert
+            message="The operations dashboard is showing empty-state data because the API request failed."
+            details={error}
+          />
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">

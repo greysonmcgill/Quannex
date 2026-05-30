@@ -11,30 +11,14 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from quan.models.database import Account, ComplianceEvent, ContactAttempt, Payment
-
-PIPELINE_STAGES = [
-    "ingested",
-    "enriched",
-    "scored",
-    "contacted",
-    "negotiating",
-    "payment_pending",
-    "resolved",
-]
-CHANNEL_COSTS = {
-    "sms": Decimal("0.02"),
-    "email": Decimal("0.01"),
-    "voice": Decimal("0.15"),
-    "digital": Decimal("0.03"),
-    "mail": Decimal("0.55"),
-}
+from quan.utils import CONTACT_COSTS, PIPELINE_STAGES, compute_delta, iso_now, to_iso, utc_now
 
 
 def build_full_dashboard(db: Session) -> dict[str, Any]:
     """Build the full dashboard payload expected by the frontend."""
 
     return {
-        "generated_at": _iso_now(),
+        "generated_at": iso_now(),
         "executive": build_executive_snapshot(db),
         "operations": build_operations_snapshot(db),
         "compliance": build_compliance_snapshot(db),
@@ -46,7 +30,7 @@ def build_full_dashboard(db: Session) -> dict[str, Any]:
 def build_executive_snapshot(db: Session) -> dict[str, Any]:
     """Executive-level KPI snapshot."""
 
-    now = _now()
+    now = utc_now()
     start = now - timedelta(days=30)
     previous_start = start - timedelta(days=30)
 
@@ -91,17 +75,17 @@ def build_executive_snapshot(db: Session) -> dict[str, Any]:
     prev_cost_per_dollar = _safe_ratio(previous_costs, previous_revenue)
 
     return {
-        "generated_at": _iso_now(),
+        "generated_at": iso_now(),
         "period": "30d",
         "kpis": {
-            "total_revenue": _kpi(revenue, "USD", _delta(revenue, previous_revenue)),
-            "gross_margin": _kpi(gross_margin, "%", _delta(gross_margin, prev_gross_margin)),
-            "recovery_rate": _kpi(recovery_rate, "%", _delta(recovery_rate, prev_recovery_rate)),
-            "roi": _kpi(roi, "%", _delta(roi, prev_roi)),
+            "total_revenue": _kpi(revenue, "USD", compute_delta(revenue, previous_revenue)),
+            "gross_margin": _kpi(gross_margin, "%", compute_delta(gross_margin, prev_gross_margin)),
+            "recovery_rate": _kpi(recovery_rate, "%", compute_delta(recovery_rate, prev_recovery_rate)),
+            "roi": _kpi(roi, "%", compute_delta(roi, prev_roi)),
             "cost_per_dollar": _kpi(
                 cost_per_dollar,
                 "USD",
-                _delta(cost_per_dollar, prev_cost_per_dollar, invert_direction=True),
+                compute_delta(cost_per_dollar, prev_cost_per_dollar, invert_direction=True),
             ),
         },
         "trends": {
@@ -126,7 +110,7 @@ def build_operations_snapshot(db: Session) -> dict[str, Any]:
     recent_resolutions = db.scalar(
         select(func.count()).select_from(Account).where(
             Account.status == "resolved",
-            Account.updated_at >= _now() - timedelta(hours=24),
+            Account.updated_at >= utc_now() - timedelta(hours=24),
         )
     ) or 0
     recent_payments = _count_since(db, Payment.recorded_at, timedelta(hours=24))
@@ -137,7 +121,7 @@ def build_operations_snapshot(db: Session) -> dict[str, Any]:
     capacity_utilization = min(active_contact_queue / max(active_accounts, 1), 1.0)
 
     return {
-        "generated_at": _iso_now(),
+        "generated_at": iso_now(),
         "pipeline": pipeline,
         "channels": channels,
         "queues": queues,
@@ -155,7 +139,7 @@ def build_operations_snapshot(db: Session) -> dict[str, Any]:
 def build_compliance_snapshot(db: Session) -> dict[str, Any]:
     """Compliance snapshot using recorded events."""
 
-    now = _now()
+    now = utc_now()
     thirty_days = now - timedelta(days=30)
     ninety_days = now - timedelta(days=90)
 
@@ -189,7 +173,7 @@ def build_compliance_snapshot(db: Session) -> dict[str, Any]:
     recent = [
         {
             "id": event.event_id,
-            "date": _iso_value(event.occurred_at),
+            "date": to_iso(event.occurred_at),
             "type": event.event_type,
             "description": event.message,
             "severity": event.severity,
@@ -199,7 +183,7 @@ def build_compliance_snapshot(db: Session) -> dict[str, Any]:
     ]
 
     return {
-        "generated_at": _iso_now(),
+        "generated_at": iso_now(),
         "overall_score": {
             "score": round(overall_score, 2),
             "rating": _rating_for_score(overall_score),
@@ -226,7 +210,7 @@ def build_compliance_snapshot(db: Session) -> dict[str, Any]:
                 "compliance_events": {"status": "complete" if events_90 else "empty", "coverage": 100 if events_90 else 0},
             },
             "last_audit": recent[0]["date"] if recent else "",
-            "next_scheduled": _iso_value(now + timedelta(days=90)),
+            "next_scheduled": to_iso(now + timedelta(days=90)),
         },
         "violations": {
             "total_30d": len(events_30),
@@ -264,7 +248,7 @@ def build_system_health(db: Session) -> dict[str, Any]:
             "status": "healthy",
             "uptime": "Operational",
             "modules": modules,
-            "last_incident": _iso_value(_now() - timedelta(days=1)) if total_accounts else "No incidents",
+            "last_incident": to_iso(utc_now() - timedelta(days=1)) if total_accounts else "No incidents",
             "mttr": "0 minutes" if total_contacts or total_payments else "N/A",
         }
     except Exception:
@@ -279,7 +263,7 @@ def build_system_health(db: Session) -> dict[str, Any]:
                 "dashboard": "degraded",
                 "reporting": "degraded",
             },
-            "last_incident": _iso_now(),
+            "last_incident": iso_now(),
             "mttr": "Unknown",
         }
 
@@ -519,7 +503,7 @@ def _build_state_compliance(events: list[ComplianceEvent]) -> dict[str, Any]:
 
 
 def _daily_series(db: Session, column: Any, amount_column: Any, *filters: Any) -> list[list[Any]]:
-    start = _now() - timedelta(days=13)
+    start = utc_now() - timedelta(days=13)
     rows = db.execute(
         select(func.date(column), func.coalesce(func.sum(amount_column), 0))
         .where(column >= start, *filters)
@@ -548,7 +532,7 @@ def _avg_time_in_stage(db: Session, stage: str) -> str:
     rows = db.scalars(select(Account).where(Account.status == stage)).all()
     if not rows:
         return "N/A"
-    now = _now()
+    now = utc_now()
     deltas = []
     for account in rows:
         timestamp = account.updated_at or account.created_at
@@ -604,7 +588,7 @@ def _count_since(db: Session, column: Any, delta: timedelta) -> int:
     if from_clause is None and hasattr(column, "expression"):
         from_clause = column.expression.table
     return db.scalar(
-        select(func.count()).select_from(from_clause).where(column >= _now() - delta)
+        select(func.count()).select_from(from_clause).where(column >= utc_now() - delta)
     ) or 0
 
 
@@ -628,23 +612,6 @@ def _float_ratio(numerator: float | int, denominator: float | int) -> float:
     return float(numerator) / float(denominator)
 
 
-def _delta(current: float | Decimal, previous: float | Decimal, invert_direction: bool = False) -> dict[str, Any]:
-    current_value = float(current)
-    previous_value = float(previous)
-    if previous_value == 0:
-        if current_value == 0:
-            return {"value": 0.0, "direction": "stable"}
-        direction = "down" if invert_direction else "up"
-        return {"value": 1.0, "direction": direction}
-
-    change = (current_value - previous_value) / abs(previous_value)
-    if invert_direction:
-        direction = "down" if change < 0 else "up" if change > 0 else "stable"
-    else:
-        direction = "up" if change > 0 else "down" if change < 0 else "stable"
-    return {"value": abs(change), "direction": direction}
-
-
 def _kpi(value: float | Decimal, unit: str, change: dict[str, Any]) -> dict[str, Any]:
     return {"value": float(value), "unit": unit, "change": change}
 
@@ -657,21 +624,3 @@ def _rating_for_score(score: float) -> str:
     if score >= 70:
         return "Fair"
     return "Needs Attention"
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc)
-
-
-def _iso_now() -> str:
-    return _iso_value(_now())
-
-
-def _iso_value(value: datetime | timedelta | None) -> str | None:
-    if value is None:
-        return None
-    if isinstance(value, timedelta):
-        return (_now() + value).isoformat()
-    if value.tzinfo is None:
-        value = value.replace(tzinfo=timezone.utc)
-    return value.isoformat()
