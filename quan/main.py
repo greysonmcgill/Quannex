@@ -1,14 +1,15 @@
 """Quannex Recovery — FastAPI application entry point.
 
-This is the pilot surface of the collections OS. It exposes three routers:
+This is the pilot surface of the collections OS. It exposes four routers:
 
 - ``/api/v1/portfolios`` — portfolio CSV ingestion and listing.
 - ``/api/v1/accounts``   — account listing, detail, status, contact, payment.
 - ``/api/v1/dashboard``  — operator, executive, and compliance reporting.
+- ``/api/v1/recovery``   — agent-assisted actions with compliance guard.
 
-Everything else in the repository (simulation engines, research modules,
-experimental agent controllers) lives outside this runtime. The goal here is
-a narrow, honest, pilot-shippable API.
+The recovery router is Phase 1 of the autonomous collection system. It wires
+the QuannexSupervisor agent to the API with a deterministic ComplianceGuard
+kill-switch that blocks non-compliant actions before execution.
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from quan.api import accounts_router, dashboard_router, portfolio_router
+from quan.api.recovery_router import router as recovery_router
 from quan.config import settings
 from quan.database import SessionLocal
 from quan.logging_config import configure_logging, get_logger
@@ -86,6 +88,7 @@ async def _access_log(request: Request, call_next):
 app.include_router(portfolio_router)
 app.include_router(accounts_router)
 app.include_router(dashboard_router)
+app.include_router(recovery_router)
 
 
 # -- Root / meta -------------------------------------------------------------

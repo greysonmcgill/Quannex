@@ -199,6 +199,16 @@ class Account(Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # Compliance flags (block or restrict contact)
+    do_not_call: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    do_not_email: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    do_not_mail: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    bankruptcy_flag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    deceased_flag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    disputed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    attorney_represented: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    statute_of_limitations_expired: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

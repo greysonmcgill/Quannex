@@ -30,9 +30,9 @@ from quan.agents.agentic_controller import (
 from quan.agents.memory import (
     QuannexAgentState,
     QuannexMemoryManager,
-    MLScoreCache,
-    ComplianceNote,
-    Observation,
+    QuannexMLCacheEntry,
+    QuannexComplianceNote,
+    QuannexObservation,
 )
 from quan.agents.llm_wrapper import AgentOutput, LLMWrapper
 from quan.agents.supervisor import (
@@ -60,9 +60,9 @@ __all__ = [
     # Hierarchical agent system (v2)
     "QuannexAgentState",
     "QuannexMemoryManager",
-    "MLScoreCache",
-    "ComplianceNote",
-    "Observation",
+    "QuannexMLCacheEntry",
+    "QuannexComplianceNote",
+    "QuannexObservation",
     "AgentOutput",
     "LLMWrapper",
     "QuannexSupervisor",
