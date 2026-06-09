@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from threading import RLock
 from typing import Any, Iterable
@@ -11,14 +11,9 @@ from typing import Any, Iterable
 from pydantic import BaseModel, ConfigDict, Field
 
 from quan.logging_config import get_logger
+from quan.utils import utc_now
 
 logger = get_logger(__name__)
-
-
-def utc_now() -> datetime:
-    """Return a timezone-aware UTC timestamp."""
-
-    return datetime.now(timezone.utc)
 
 
 class QuannexObservation(BaseModel):
@@ -394,3 +389,154 @@ class QuannexMemoryManager:
             .replace('"', "&quot;")
             .replace("'", "&apos;")
         )
+
+
+# ---------------------------------------------------------------------------
+# Supervisor-facing working memory
+# ---------------------------------------------------------------------------
+#
+# ``QuannexMemoryManager`` is a state-passing persistence envelope; the
+# supervisor and its specialists instead expect a live working-memory object
+# exposing ``.state`` (with a mutable ``ml_cache``), ``update_ml_cache``,
+# ``add_observation``, ``add_compliance_note``, ``budget_pct``, ``compress``,
+# ``render_context`` and ``save``.  ``AgentSessionMemory`` is that object.
+# Used bare it is ephemeral (one HTTP request = one agent step); constructed
+# with a ``persistence`` manager it writes through to the session envelope on
+# disk so multi-step sessions survive process restarts.
+
+
+class AgentMLCache:
+    """Mutable ML score cache matching the fields the supervisor reads."""
+
+    def __init__(self) -> None:
+        self.account_id: str = ""
+        self.recovery_probability: float = 0.0
+        self.settlement_threshold: float = 1.0
+        self.optimal_channels: list[str] = []
+        self.confidence: float = 0.0
+        self.segment_id: int | str | None = None
+
+
+class AgentSessionState:
+    """Live per-session agent state consumed by the supervisor."""
+
+    def __init__(self, session_id: str = "") -> None:
+        self.step_count: int = 0
+        self.account_id: str = ""
+        self.session_id: str = session_id
+        self.current_plan: list[str] = []
+        self.ml_cache = AgentMLCache()
+
+
+class AgentSessionMemory:
+    """Working memory for supervisor/specialist calls.
+
+    Without ``persistence`` everything lives in process memory and ``save()``
+    is a no-op.  With a ``QuannexMemoryManager`` every write also lands in the
+    persisted ``QuannexAgentState`` for the given ``session_id``.
+    """
+
+    def __init__(
+        self,
+        persistence: QuannexMemoryManager | None = None,
+        session_id: str = "",
+    ) -> None:
+        self.persistence = persistence
+        self.session: QuannexAgentState | None = (
+            persistence.load_state(session_id or "default") if persistence else None
+        )
+        self.state = AgentSessionState(session_id=session_id)
+        self._observations: list[str] = []
+        self._compliance_notes: list[dict[str, Any]] = []
+
+    def update_ml_cache(
+        self,
+        *,
+        account_id: str,
+        recovery_probability: float,
+        settlement_threshold: float,
+        optimal_channels: list[str],
+        confidence: float = 0.0,
+        segment_id: int | str | None = None,
+    ) -> None:
+        cache = self.state.ml_cache
+        cache.account_id = account_id
+        cache.recovery_probability = recovery_probability
+        cache.settlement_threshold = settlement_threshold
+        cache.optimal_channels = list(optimal_channels)
+        cache.confidence = confidence
+        cache.segment_id = segment_id
+        if self.persistence and self.session is not None:
+            self.persistence.cache_ml_score(
+                self.session,
+                account_id=account_id,
+                recovery_probability=recovery_probability,
+                optimal_channels=list(optimal_channels),
+                settlement_threshold=settlement_threshold,
+                confidence=confidence,
+                raw={"segment_id": segment_id},
+            )
+
+    def add_observation(
+        self, *, source: str, content: str, kind: str = "note"
+    ) -> None:
+        self._observations.append(f"[{source}:{kind}] {content}")
+        if self.persistence and self.session is not None:
+            self.persistence.add_observation(
+                self.session, source=source, content=content, kind=kind
+            )
+
+    def add_compliance_note(
+        self, *, rule: str, check: str, passed: bool, detail: str = ""
+    ) -> None:
+        self._compliance_notes.append(
+            {"rule": rule, "check": check, "passed": passed, "detail": detail}
+        )
+        if self.persistence and self.session is not None:
+            self.persistence.add_compliance_note(
+                self.session,
+                level="info" if passed else "warning",
+                rule=rule,
+                note=f"{check}: {detail}" if detail else check,
+                account_id=self.state.account_id or None,
+            )
+
+    @property
+    def compliance_notes(self) -> list[dict[str, Any]]:
+        """Read-only view of locally recorded compliance notes."""
+
+        return list(self._compliance_notes)
+
+    def budget_pct(self) -> float:
+        if self.persistence and self.session is not None:
+            estimated = self.persistence.estimate_tokens(self.session)
+            return min(estimated / max(self.session.token_budget, 1), 1.0)
+        chars = sum(len(item) for item in self._observations)
+        return min(chars / 400_000, 1.0)
+
+    def compress(self, keep_recent: int = 5) -> None:
+        self._observations = self._observations[-keep_recent:]
+        if self.persistence and self.session is not None:
+            self.session = self.persistence.compress_if_needed(self.session)
+
+    def render_context(self, max_chars: int | None = None) -> str:
+        if self.persistence and self.session is not None:
+            context = self.persistence.render_memory_xml(self.session)
+            return context[:max_chars] if max_chars else context
+        mc = self.state.ml_cache
+        lines = [
+            f"<account_id>{self.state.account_id}</account_id>",
+            (
+                f'<ml_scores recovery_probability="{mc.recovery_probability:.3f}" '
+                f'settlement_threshold="{mc.settlement_threshold:.2f}" '
+                f'confidence="{mc.confidence:.2f}" '
+                f'channels="{",".join(mc.optimal_channels)}"/>'
+            ),
+        ]
+        lines.extend(f"<observation>{item}</observation>" for item in self._observations[-8:])
+        context = "\n".join(lines)
+        return context[:max_chars] if max_chars else context
+
+    def save(self) -> None:
+        if self.persistence and self.session is not None:
+            self.persistence.save_state(self.session)

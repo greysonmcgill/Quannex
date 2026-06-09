@@ -14,7 +14,7 @@ from __future__ import annotations
 from typing import Any
 
 from quan.agents.llm_wrapper import AgentOutput, LLMWrapper
-from quan.agents.memory import QuannexMemoryManager
+from quan.agents.memory import AgentSessionMemory
 from quan.agents.supervisor import BaseSpecialist
 from quan.logging_config import get_logger
 
@@ -88,7 +88,7 @@ class OutreachSpecialist(BaseSpecialist):
 
     async def execute(
         self,
-        memory: QuannexMemoryManager,
+        memory: AgentSessionMemory,
         payload: dict[str, Any],
         llm: LLMWrapper,
     ) -> AgentOutput:

@@ -199,6 +199,18 @@ class Account(Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # Tokenization linkage
+    #
+    # External identifier of the RWA tokenization pool this account's debt was
+    # placed into (see ``quan.finance.tokenization.RWATokenizationPlatform``).
+    # NULL means the account has not been pooled. Payments are aggregated per
+    # pool by ``quan.finance.collections_bridge.CollectionsBridge`` and fed to
+    # the waterfall via ``run_epoch``. A ``total_recovered`` rollup column was
+    # deliberately NOT added: recoveries (settlement proceeds) are derived from
+    # Payment rows at aggregation time, keeping payments the single source of
+    # truth instead of maintaining a second writer-less denormalized counter.
+    pool_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+
     # Compliance flags (block or restrict contact)
     do_not_call: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     do_not_email: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

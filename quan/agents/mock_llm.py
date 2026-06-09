@@ -77,9 +77,60 @@ class MockLLMWrapper:
         return "Summary: Account requires follow-up contact via preferred channel."
 
     def _generate_default(self, system: str, user_message: str) -> AgentOutput:
-        """Generate a contextual mock response based on the prompt."""
+        """Generate a contextual mock response based on the prompt.
+
+        Role detection mirrors the real prompts in supervisor.py /
+        outreach_specialist.py.  Order matters: the supervisor and outreach
+        prompts mention "planner"/"verifier"/"compliance" in passing, so the
+        most specific role phrases are matched first.
+        """
         lower_system = system.lower()
         lower_user = user_message.lower()
+
+        # Supervisor prompt mentions every specialist by name — match it
+        # first so decisions use the configured default action.
+        if "quannex supervisor" in lower_system:
+            return AgentOutput(
+                reasoning="Analyzing account state to determine next action.",
+                action=self._default_action,
+                payload={"goal": "maximize recovery"},
+                next_steps=["execute_plan_step"],
+                token_estimate=100,
+            )
+
+        # Outreach prompt contains the word "compliance" in its hard rules,
+        # so it must be detected before the verifier branch.
+        if "outreach" in lower_system:
+            # Prefer the explicit channel tag the OutreachSpecialist embeds;
+            # bare substring search would false-match channel lists in the
+            # rendered memory context (e.g. channels="email,sms").
+            channel = "email"
+            tag = re.search(r"<channel>(\w+)</channel>", user_message, re.IGNORECASE)
+            if tag:
+                channel = tag.group(1).lower()
+            elif "sms" in lower_user:
+                channel = "sms"
+            elif "voice" in lower_user:
+                channel = "voice"
+
+            return AgentOutput(
+                reasoning=f"Generated compliant {channel} message with Mini-Miranda.",
+                action="draft",
+                payload={
+                    "channel": channel,
+                    "message_text": (
+                        "Hi, this is a reminder about your account. "
+                        "This is an attempt to collect a debt and any information "
+                        "obtained will be used for that purpose. This communication "
+                        "is from a debt collector. Please contact us to discuss "
+                        "payment options."
+                    ),
+                    "subject": "Important Notice About Your Account",
+                    "mini_miranda_included": True,
+                },
+                next_steps=["verify", "send_if_approved"],
+                token_estimate=100,
+            )
 
         # Detect specialist type from system prompt
         if "planner" in lower_system:
@@ -123,32 +174,6 @@ class MockLLMWrapper:
                 payload={"compliance_passed": True},
                 next_steps=["proceed_with_outreach"],
                 token_estimate=50,
-            )
-
-        if "outreach" in lower_system:
-            channel = "email"
-            if "sms" in lower_user:
-                channel = "sms"
-            elif "voice" in lower_user:
-                channel = "voice"
-
-            return AgentOutput(
-                reasoning=f"Generated compliant {channel} message with Mini-Miranda.",
-                action="draft",
-                payload={
-                    "channel": channel,
-                    "message_text": (
-                        "Hi, this is a reminder about your account. "
-                        "This is an attempt to collect a debt and any information "
-                        "obtained will be used for that purpose. This communication "
-                        "is from a debt collector. Please contact us to discuss "
-                        "payment options."
-                    ),
-                    "subject": "Important Notice About Your Account",
-                    "mini_miranda_included": True,
-                },
-                next_steps=["verify", "send_if_approved"],
-                token_estimate=100,
             )
 
         if "simulator" in lower_system or "optimizer" in lower_system:

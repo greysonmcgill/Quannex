@@ -5,7 +5,7 @@ QuannexSupervisor — hierarchical agent orchestrator.
 Architecture:
     Supervisor.step(account_data, goal)
         1. Fast reflex: call CollectionIntelligence (ML scoring) — ~0 LLM tokens
-        2. Build XML-tagged context from QuannexMemoryManager
+        2. Build XML-tagged context from AgentSessionMemory
         3. LLM call → AgentOutput (structured JSON)
         4. Route action to specialist (outreach, verify, simulate, etc.)
         5. Log compliance, persist state, return result
@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from quan.agents.llm_wrapper import AgentOutput, LLMWrapper
-from quan.agents.memory import QuannexAgentState, QuannexMemoryManager
+from quan.agents.memory import AgentSessionMemory
 from quan.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -42,7 +42,7 @@ class BaseSpecialist:
 
     async def execute(
         self,
-        memory: QuannexMemoryManager,
+        memory: AgentSessionMemory,
         payload: dict[str, Any],
         llm: LLMWrapper,
     ) -> AgentOutput:
@@ -60,7 +60,7 @@ class PlannerSpecialist(BaseSpecialist):
 
     async def execute(
         self,
-        memory: QuannexMemoryManager,
+        memory: AgentSessionMemory,
         payload: dict[str, Any],
         llm: LLMWrapper,
     ) -> AgentOutput:
@@ -87,7 +87,7 @@ class VerifierSpecialist(BaseSpecialist):
 
     async def execute(
         self,
-        memory: QuannexMemoryManager,
+        memory: AgentSessionMemory,
         payload: dict[str, Any],
         llm: LLMWrapper,
     ) -> AgentOutput:
@@ -135,7 +135,7 @@ class SimulatorSpecialist(BaseSpecialist):
 
     async def execute(
         self,
-        memory: QuannexMemoryManager,
+        memory: AgentSessionMemory,
         payload: dict[str, Any],
         llm: LLMWrapper,
     ) -> AgentOutput:
@@ -163,7 +163,7 @@ class MemoryManagerSpecialist(BaseSpecialist):
 
     async def execute(
         self,
-        memory: QuannexMemoryManager,
+        memory: AgentSessionMemory,
         payload: dict[str, Any],
         llm: LLMWrapper,
     ) -> AgentOutput:
@@ -226,18 +226,18 @@ class QuannexSupervisor:
     Integrates:
     - CollectionIntelligence (ML fast path)
     - LLMWrapper (reasoning layer)
-    - QuannexMemoryManager (state + compression)
+    - AgentSessionMemory (working state, optional persistence)
     - Specialist agents (planner, outreach, verifier, simulator, memory)
     """
 
     def __init__(
         self,
         llm: LLMWrapper | None = None,
-        memory: QuannexMemoryManager | None = None,
+        memory: AgentSessionMemory | None = None,
         specialists: dict[str, BaseSpecialist] | None = None,
     ):
         self.llm = llm or LLMWrapper()
-        self.memory = memory or QuannexMemoryManager()
+        self.memory = memory or AgentSessionMemory()
         self.specialists: dict[str, BaseSpecialist] = specialists or {
             "plan": PlannerSpecialist(),
             "verify": VerifierSpecialist(),

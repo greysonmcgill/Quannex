@@ -22,8 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from quan.api import accounts_router, dashboard_router, portfolio_router
-from quan.api.recovery_router import router as recovery_router
+from quan.api import accounts_router, dashboard_router, portfolio_router, recovery_router
 from quan.config import settings
 from quan.database import SessionLocal
 from quan.logging_config import configure_logging, get_logger

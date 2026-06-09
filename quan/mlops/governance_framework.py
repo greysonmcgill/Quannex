@@ -478,7 +478,7 @@ class MessageRuleLegalReview:
     state_requirements: dict[str, bool] = field(default_factory=dict)
 
     # Review tracking
-    submitted_by: str
+    submitted_by: str = ""
     submitted_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     reviewed_by: Optional[str] = None
     reviewed_at: Optional[datetime] = None
@@ -561,7 +561,7 @@ class ChangeRequest:
     test_results: dict[str, Any] = field(default_factory=dict)
 
     # Approval
-    requested_by: str
+    requested_by: str = ""
     requested_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     approval_request_id: Optional[str] = None
 
@@ -586,7 +586,7 @@ class DeprecationWorkflow:
     # Deprecation details
     reason: str
     replacement_model_id: Optional[str] = None
-    initiated_by: str
+    initiated_by: str = ""
     initiated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Timeline

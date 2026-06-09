@@ -1132,6 +1132,12 @@ class PoolManager:
         if not pool:
             return False
 
+        # Only an OPEN pool can be closed; closing an ACTIVE pool would be
+        # an invalid backward lifecycle transition.
+        if pool.status != PoolStatus.OPEN:
+            logger.warning(f"Pool {pool_id} cannot be closed from status {pool.status}")
+            return False
+
         if pool.metrics.total_face_value < pool.min_pool_size:
             logger.warning(
                 f"Pool {pool_id} below minimum size: "
@@ -1409,8 +1415,9 @@ class TrancheManager:
             operating_expenses=operating_expenses,
         )
 
-        # Available cash after expenses
-        available = collections + recoveries - operating_expenses
+        # Available cash after expenses; floored at zero so that expenses
+        # exceeding inflow never produce a negative interest allocation.
+        available = max(Decimal("0"), collections + recoveries - operating_expenses)
 
         # Calculate required interest
         daily_rate_drop = drop.current_yield / Decimal("365")

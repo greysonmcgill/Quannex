@@ -48,7 +48,7 @@ class AgentActionRequest(BaseModel):
 class OutreachRequest(BaseModel):
     """Request to generate and optionally send outreach."""
 
-    channel: str = Field(..., pattern="^(sms|email|voice|mail|push)$")
+    channel: str = Field(..., pattern="^(sms|email|voice|mail|digital)$")
     goal: str = Field(
         default="initial_notice",
         description="Message goal: initial_notice, reminder, settlement_offer, etc.",
@@ -109,9 +109,13 @@ class ComplianceCheckResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+#
+# Each HTTP request is a single agent step: the supervisor gets a fresh
+# ephemeral AgentSessionMemory (no persistence argument), so nothing is
+# carried across requests.
 
 
-@router.post("/{account_id}/suggest")
+@router.post("/{account_id}/suggest", response_model=AgentActionResponse)
 async def get_suggested_action(
     account_id: str,
     request: AgentActionRequest,
@@ -176,7 +180,7 @@ async def get_suggested_action(
     )
 
 
-@router.post("/{account_id}/outreach")
+@router.post("/{account_id}/outreach", response_model=OutreachResponse)
 async def generate_outreach(
     account_id: str,
     request: OutreachRequest,
@@ -311,7 +315,7 @@ async def generate_outreach(
     )
 
 
-@router.post("/{account_id}/compliance-check")
+@router.post("/{account_id}/compliance-check", response_model=ComplianceCheckResponse)
 def check_compliance(
     account_id: str,
     request: ComplianceCheckRequest,

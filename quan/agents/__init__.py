@@ -28,6 +28,9 @@ from quan.agents.agentic_controller import (
 )
 
 from quan.agents.memory import (
+    AgentMLCache,
+    AgentSessionMemory,
+    AgentSessionState,
     QuannexAgentState,
     QuannexMemoryManager,
     QuannexMLCacheEntry,
@@ -58,6 +61,9 @@ __all__ = [
     "CostTracker",
     "RAGIntegration",
     # Hierarchical agent system (v2)
+    "AgentMLCache",
+    "AgentSessionMemory",
+    "AgentSessionState",
     "QuannexAgentState",
     "QuannexMemoryManager",
     "QuannexMLCacheEntry",
